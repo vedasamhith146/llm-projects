@@ -16,15 +16,16 @@ for x in range(10):
     vocab_size+=1
     vocab_max+=1
     i=0
+    new_text=[]
     while i<len_text-1:
-        if (text[i]==p1) and (text[i+1]==p2):
-            text[i]=vocab_max 
-            k=i+1
-            while k<len_text-1:
-                text[k]=text[k+1]
-                k+=1
-            len_text-=1
-        i+=1
+        if (text[i]==p1) and (text[i+1]==p2) :
+            new_text.append(vocab_max)
+            i+=2
+        else :
+            new_text.append(text[i])
+            i+=1
+
+
     
 
 
