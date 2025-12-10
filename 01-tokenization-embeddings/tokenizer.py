@@ -3,9 +3,9 @@ with open("data/tiny.txt",'r') as file:
 text=list(text.encode('UTF-8'))
 vocab_size=256
 vocab_max=vocab_size-1
+merges={}
 while True:
     len_text=len(text)
-    print("length of text is",len_text)
     vocab={}
     for x,y in zip(text,text[1:]):
         key=(x,y)
@@ -14,11 +14,13 @@ while True:
         break
     P=list(vocab.items())
     P.sort(key= lambda p:p[1], reverse=True)
-    if P[0][1]<2:
+    if P[0][1]<100:
         break
     (p1,p2)=(P[0])[0]
     vocab_size+=1
     vocab_max+=1
+    merges[(p1,p2)]=vocab_max
+    print(P[0][1])
     i=0
     new_text=[]
     while i<len_text-1:
@@ -31,7 +33,11 @@ while True:
     if i!=len_text:
         new_text.append(text[i])
     text=new_text.copy()
-print("final length of text is",len(text))
+merges=list(merges.items())
+merges.sort(key=lambda p:p[1])
+print(merges)
+
+
 
 
     
