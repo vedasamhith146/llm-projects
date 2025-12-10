@@ -1,21 +1,21 @@
 import pickle
 with open("merges.pkl",'rb') as f:
     merges=pickle.load(f)
-def decode(str):
+def decode(text):
+    reverse_merges={v:k for k,v in merges.items()} 
     while True:
-        if max(str)<256:
+        if max(text)<256:
             break
-        new_str=[]
+        new_text=[]
         i=0
-        reverse_merges={v:k for k,v in merges.items()}
-        while i<len(str):
-            if str[i] in reverse_merges:
-                new_str.append((reverse_merges[str[i]])[0])
-                new_str.append((reverse_merges[str[i]])[1])
+        while i<len(text):
+            if text[i] in reverse_merges:
+                new_text.append((reverse_merges[text[i]])[0])
+                new_text.append((reverse_merges[text[i]])[1])
                 i+=1
             else :
-                new_str.append(str[i])
+                new_text.append(text[i])
                 i+=1
-        str=new_str.copy()
-    str=bytes(str).decode('utf-8')
-    return str
+        text=new_text.copy()
+    text=bytes(text).decode('utf-8')
+    return text
