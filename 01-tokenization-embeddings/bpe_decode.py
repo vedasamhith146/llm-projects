@@ -3,9 +3,7 @@ with open("merges.pkl",'rb') as f:
     merges=pickle.load(f)
 def decode(text):
     reverse_merges={v:k for k,v in merges.items()} 
-    while True:
-        if max(text)<256:
-            break
+    while any(p in reverse_merges for p in text) :
         new_text=[]
         i=0
         while i<len(text):
