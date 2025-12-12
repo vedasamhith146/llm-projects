@@ -15,5 +15,5 @@ def decode(text):
                 new_text.append(text[i])
                 i+=1
         text=new_text.copy()
-    text=bytes(text).decode('utf-8')
+    text=bytes(text).decode('utf-8',errors="replace")
     return text
