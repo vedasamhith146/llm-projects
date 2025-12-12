@@ -6,7 +6,7 @@ def visualizer(text):
     print("Text with token boundaries")
     for i in range(len(text)):
         print(f"[{text[i]}]:{decode([text[i]])}")
-
-with open("data/testnew.txt",'r') as f:
-    new=f.read()
-visualizer(new)
+if __name__=="__main__":
+    with open("data/testnew.txt",'r') as f:
+        new=f.read()
+    visualizer(new)
