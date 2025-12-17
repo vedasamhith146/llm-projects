@@ -1,6 +1,6 @@
 import torch 
 import math
-from token_tensor import get_tokens,token_embd
+from token_tensor import token_embd
 def pos_embd_sin(no_of_pos,d):
     w_pe=[]
     for m in range(no_of_pos):
