@@ -36,15 +36,16 @@ def pos_reverse(pos_vec):
 
 def rotation(rot_mat):
     for i in range(rot_mat.size(0)):
-        q_temp=rot_mat[i].unsqueeze(0)
+        rot_temp=rot_mat[i].unsqueeze(0)
         cos_tab=cos_temp(i,dim)
         sin_tab=sin_temp(i,dim)
-        q_temp_rev=pos_reverse(q_temp)
-        q_temp=(q_temp*cos_tab)+(q_temp_rev*sin_tab)
-        rot_mat[i]=q_temp
+        rot_temp_rev=pos_reverse(rot_temp)
+        rot_temp=(rot_temp*cos_tab)+(rot_temp_rev*sin_tab)
+        rot_mat[i]=rot_temp
     return rot_mat
 
-
+q=rotation(q)
+k=rotation(k)
 
 
 
