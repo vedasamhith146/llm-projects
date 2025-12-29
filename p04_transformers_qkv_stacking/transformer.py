@@ -1,6 +1,7 @@
 from bpe_encode import encode
 from bpe_decode import decode
 import torch
+torch.set_num_threads(4)
 import torch.nn.functional as F
 import math
 import torch.optim as optim
@@ -20,19 +21,18 @@ class Attention:
         self.Wq=torch.randn((d_model,d_model),generator=g)
         self.Wk=torch.randn((d_model,d_model),generator=g)
         self.Wv=torch.randn((d_model,d_model),generator=g)
+        self.register_mask=torch.tril(torch.ones(T,T))
     def forward(self,x):
         #calculation of Q,K,V
         Q= x @ self.Wq
         K= x @ self.Wk
         V= x @ self.Wv
         #viewing Q,K,V as (h,B,T,d_head)
-        Q=Q.view(B,T,h,d_head).transpose(1,2).transpose(0,1)
-        K=K.view(B,T,h,d_head).transpose(1,2).transpose(0,1)
-        V=V.view(B,T,h,d_head).transpose(1,2).transpose(0,1)
+        Q=Q.view(B,T,h,d_head).permute(2,0,1,3)
+        K=K.view(B,T,h,d_head).permute(2,0,1,3)
+        V=V.view(B,T,h,d_head).permute(2,0,1,3)
         S= Q @ K.transpose(2,3)/math.sqrt(d_head)
-        mask=torch.tril(torch.ones(B,T,T))
-        for i in range(h):
-            S[i]=S[i].masked_fill(mask==0,float('-inf'))
+        S=S.masked_fill(self.register_mask==0,float('-inf'))
         A=torch.softmax(S,dim=-1)
         outs= A @ V
         outs=outs.transpose(0,1).transpose(1,2).contiguous().view(B,T,d_model)
@@ -65,16 +65,10 @@ class LayerNorm:
         self.mul_bias=torch.ones((d_model))
         self.add_bias=torch.zeros((d_model))
     def forward(self,x):
-        for i in range(B):
-            temp_row=x[i]
-            temp_mean=temp_row.sum(-1)/d_model
-            temp_row=temp_row-temp_mean.unsqueeze(1)
-            temp_squares=temp_row**2
-            temp_sd=(temp_squares.sum(-1)/d_model)**0.5
-            temp_row=temp_row/temp_sd.unsqueeze(1)
-            x[i]=temp_row
-        x= self.mul_bias *x + self.add_bias
-        return x
+        mean=x.mean(dim=-1,keepdim=True)
+        var=(((x-mean)**2).mean(dim=-1,keepdim=True))
+        x=(x-mean)/torch.sqrt(var+1e-5)
+        return self.mul_bias * x + self.add_bias
     def parameters(self):
         params=[self.mul_bias,self.add_bias]
         return params
@@ -144,6 +138,7 @@ with open("data/test.txt",'r') as f:
 token_ids=encode(tokens)
 tokens_per_batch=B*T
 num_batches=len(token_ids)//tokens_per_batch
+token_ids=torch.tensor(token_ids,dtype=torch.long)
 
 model=Model()
 for p in model.parameters():
@@ -158,7 +153,7 @@ optimizer=optim.AdamW(
 
 for step in range(10000):
     i=step % num_batches
-    x=torch.tensor(token_ids[tokens_per_batch*i:tokens_per_batch*(i+1)]).view(B,T)
+    x=token_ids[tokens_per_batch*i:tokens_per_batch*(i+1)].view(B,T)
     logits= model(x)
     logits=logits[:,:-1,:]
     targets=x[:,1:]
@@ -169,7 +164,8 @@ for step in range(10000):
     if step==2000:
         for param_group in optimizer.param_groups:
             param_group['lr']*=0.1
-print(loss)
+    if step%200==0:
+        print(step,loss.item())
 
 
 
