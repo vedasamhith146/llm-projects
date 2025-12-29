@@ -36,7 +36,8 @@ class Attention(nn.Module):
         K=K.view(B,T,h,d_head).transpose(1,2)
         V=V.view(B,T,h,d_head).transpose(1,2)
         att= Q @ K.transpose(-2,-1)/math.sqrt(d_head)
-        att=att.masked_fill(self.mask==0,float('-inf'))
+        _,_,t,_=att.shape
+        att=att.masked_fill(self.mask[:t,:t]==0,float('-inf'))
         att=torch.softmax(att,dim=-1)
         out= att @ V
         out=out.transpose(1,2).contiguous().view(B,T,d_model)
@@ -114,6 +115,25 @@ for step in range(1000):
             param_group['lr']*=0.1
     if step%200==0:
         print(step,loss.item())
+
+prompt="First Citizen:"
+context=torch.tensor(encode(prompt))
+context=context.to(device)
+
+for _ in range(500):
+    x=context[-T:].unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        logits=model(x)
+    
+    next_logits=logits[:,-1,:]
+    probs=torch.softmax(next_logits,dim=-1)
+    next_token=torch.multinomial(probs,num_samples=1)
+    context=torch.cat([context,next_token.squeeze(0)],dim=0)
+
+context=context.tolist()
+print(decode(context))
+
 
 
 
