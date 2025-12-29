@@ -2,6 +2,7 @@ from bpe_encode import encode
 from bpe_decode import decode
 import torch
 torch.set_num_threads(4)
+device="cuda" if torch.cuda.is_available() else "cpu"
 import torch.nn.functional as F
 import math
 import torch.optim as optim
@@ -10,9 +11,10 @@ g.manual_seed(42)
 
 #initialising of variables
 vocab_size=1264
-d_model=64
-B=T=32
-h=4
+d_model=256
+B=64
+T=128
+h=8
 d_head=d_model//h
 n_layers=6
 
@@ -138,22 +140,22 @@ with open("data/test.txt",'r') as f:
 token_ids=encode(tokens)
 tokens_per_batch=B*T
 num_batches=len(token_ids)//tokens_per_batch
-token_ids=torch.tensor(token_ids,dtype=torch.long)
+token_ids=torch.tensor(token_ids,dtype=torch.long).to(device)
 
-model=Model()
+model=Model().to(device)
 for p in model.parameters():
     p.requires_grad=True
 optimizer=optim.AdamW(
     params=model.parameters(),
-    lr=2e-4,
+    lr=3e-4,
     betas=(0.9,0.999),
     eps=1e-8,
-    weight_decay=1e-2
+    weight_decay=1e-3
 )
 
 for step in range(10000):
     i=step % num_batches
-    x=token_ids[tokens_per_batch*i:tokens_per_batch*(i+1)].view(B,T)
+    x=token_ids[tokens_per_batch*i:tokens_per_batch*(i+1)].view(B,T).to(device)
     logits= model(x)
     logits=logits[:,:-1,:]
     targets=x[:,1:]
