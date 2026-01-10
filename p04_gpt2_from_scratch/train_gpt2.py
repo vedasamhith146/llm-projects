@@ -149,6 +149,8 @@ torch.set_float32_matmul_precision('high')
 
 model=GPT2(GPT2Config())
 model.to(device)
+model=torch.compile(model)
+
 
 optimizer=torch.optim.AdamW(model.parameters(),lr=3e-4)
 for i in range(50):
