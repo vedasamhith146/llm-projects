@@ -50,7 +50,7 @@ class CasualSelfAttention(nn.Module):
     #att=F.softmax(att,dim=-1)
     #out=att@v 
 
-    y=F.scaled_dot_product_attention(q,k,v,is_causal=True)
+    out=F.scaled_dot_product_attention(q,k,v,is_causal=True)
     out=out.transpose(1,2).contiguous().view(B,T,C)
     out=self.c_proj(out)
     return out
