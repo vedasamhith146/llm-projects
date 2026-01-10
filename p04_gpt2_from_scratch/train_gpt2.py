@@ -17,6 +17,7 @@ class MLP(nn.Module):
     super().__init__()
     self.c_fc=nn.Linear(config.n_embd,config.n_embd*4)
     self.c_proj=nn.Linear(config.n_embd*4,config.n_embd)
+    self.c_proj.NANOGPT_SCALE_INIT=1.0
   def forward(self,x):
     x=self.c_fc(x)
     x=F.gelu(x,approximate='tanh')
@@ -33,6 +34,7 @@ class CasualSelfAttention(nn.Module):
     self.n_head=config.n_head
     self.head_dim=config.n_embd//config.n_head
     self.register_buffer("bias",torch.tril(torch.ones(config.block_size,config.block_size)).view(1,1,config.block_size,config.block_size),persistent=False)
+    self.c_proj.NANOGPT_SCALE_INIT=1.0
   def forward(self,x):
     B,T,C=x.size() 
     qkv=self.c_attn(x)
@@ -79,7 +81,10 @@ class GPT2(nn.Module):
 
   def _init_weights(self,module):
      if isinstance(module,nn.Linear):
-        torch.nn.init.normal_(module.weight,mean=0.0,std=0.02)
+        std=0.02
+        if hasattr(module,'NANOGPT_SCALE_INIT'):
+           std*=(2*self.config.n_layer)**-0.5
+        torch.nn.init.normal_(module.weight,mean=0.0,std=std)
         if module.bias is not None:
            torch.nn.init.zeros_(module.bias)
      elif isinstance(module,nn.Embedding):
