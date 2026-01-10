@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 from dataclasses import dataclass
 import math
+import inspect
 
 @dataclass
 class GPT2Config:
@@ -108,6 +109,24 @@ class GPT2(nn.Module):
     if targets is not None:
       loss=F.cross_entropy(logits.view(-1,logits.size(-1)),targets.view(-1))
     return logits,loss
+  
+  def configure_optimizers(self,weight_decay,learning_rate,device):
+     param_dict={pn:p for pn,p in self.named_parameters()}
+     param_dict={pn:p for pn,p in param_dict.items() if p.requires_grad}
+     decay_params=[p for n,p in param_dict.items() if p.dim()>=2]
+     nondecay_params=[p for n,p in param_dict.items() if p.dim()<2]
+     optim_groups=[
+        {'params':decay_params,'weight_decay':weight_decay},
+        {'params':nondecay_params,'weight_decay':0.0}
+     ]
+     num_decay_params=sum(p.numel() for p in decay_params)
+     num_nondecay_params=sum(p.numel() for p in nondecay_params)
+     print(f"num decayed parameter tensors:{len(decay_params)} with {num_decay_params:,} parameters")
+     print(f"num non-decayed parameter tensors:{len(nondecay_params)},with {num_nondecay_params:,} parameters")
+     fused_available='fused' in inspect.signature(torch.optim.AdamW).parameters
+     use_fused=fused_available and 'cuda' in device
+     print(f"using fused AdamW:{use_fused}")
+     optimizer=torch.optim.AdamW(optim_groups,lr=learning_rate,betas=(0.9,0.95),eps=1e-8,fused=use_fused)
 #-------------------------------------------------------------------------------------------------------------------------------
 import tiktoken
 
@@ -168,7 +187,9 @@ def get_lr(it):
    coeff=0.5*(1.0 + math.cos(math.pi*decay_ratio))
    return min_lr+coeff*(max_lr-min_lr)
 
-optimizer=torch.optim.AdamW(model.parameters(),lr=3e-4,betas=(0.9,0.95),eps=1e-8)
+optimizer=model.configure_optimizers(weight_decay=0.1,learning_rate=6e-4,device=device)
+
+
 for step in range(max_steps):
   x,y=train_loader.next_batch()
   x,y=x.to(device),y.to(device)
@@ -183,7 +204,7 @@ for step in range(max_steps):
      param_group['lr']=lr
   optimizer.step()
   torch.cuda.synchronize()
-  print(f"step {i} | loss: {loss.item():.6f} | lr {lr:.4e} | norm: {norm:.4f}")
+  print(f"step {step} | loss: {loss.item():.6f} | lr {lr:.4e} | norm: {norm:.4f}")
      
 
 
