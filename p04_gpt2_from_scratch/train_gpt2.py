@@ -14,13 +14,14 @@ class mlp(nn.Module):
     return x
 
 class attn(nn.Module):
-  def __init__(self,n_embd,n_head):
+  def __init__(self,n_embd,n_head,block_size):
     super().__init__()
     self.c_attn=nn.Linear(n_embd,n_embd*3)
     self.c_proj=nn.Linear(n_embd,n_embd)
     self.n_embd=n_embd
     self.n_head=n_head
     self.head_dim=n_embd//n_head
+    self.register_buffer("bias",torch.tril(torch.ones(block_size,block_size)).view(1,1,block_size,block_size),persistent=False)
   def forward(self,x):
     B,T,C=x.size() 
     qkv=self.c_attn(x)
@@ -30,8 +31,7 @@ class attn(nn.Module):
     v=v.view(B,T,self.n_head,self.head_dim).transpose(1,2)
 
     att=(q@k.transpose(-2,-1))/(self.head_dim**0.5)
-    mask=torch.tril(torch.ones(T,T,device=x.device))
-    att=att.masked_fill(mask==0,float('-inf'))
+    att=att.masked_fill(self.bias[:,:,:T,:T]==0,float('-inf'))
     att=F.softmax(att,dim=-1)
 
     out=att@v 
@@ -40,10 +40,10 @@ class attn(nn.Module):
     return out
 
 class Head(nn.Module):
-  def __init__(self,n_embd,n_head):
+  def __init__(self,n_embd,n_head,block_size):
     super().__init__()
     self.ln_1=nn.LayerNorm(n_embd)
-    self.attn=attn(n_embd,n_head)
+    self.attn=attn(n_embd,n_head,block_size)
     self.ln_2=nn.LayerNorm(n_embd)
     self.mlp=mlp(n_embd)
   def forward(self,x):
@@ -56,7 +56,7 @@ class transformer(nn.Module):
     super().__init__()
     self.wte=nn.Embedding(vocab_size,n_embd)
     self.wpe=nn.Embedding(block_size,n_embd)
-    self.h=nn.ModuleList([Head(n_embd,n_head) for _ in range(n_layers)])
+    self.h=nn.ModuleList([Head(n_embd,n_head,block_size) for _ in range(n_layers)])
     self.ln_f=nn.LayerNorm(n_embd)
   def forward(self,x):
     B,T=x.size()
@@ -87,10 +87,6 @@ from transformers import GPT2LMHeadModel
 hf_model=GPT2LMHeadModel.from_pretrained("gpt2")
 hf_state=hf_model.state_dict()
 my_state=my_model.state_dict()
-hf_keys=set(hf_state.keys())
-my_keys=set(my_state.keys())
-print("missing in my model",hf_keys-my_keys)
-print("extra in my model",my_keys-hf_keys)
 
 
 new_state = {}
