@@ -92,22 +92,25 @@ my_keys=set(my_state.keys())
 print("missing in my model",hf_keys-my_keys)
 print("extra in my model",my_keys-hf_keys)
 
-new_state={}
+
+new_state = {}
 for k in hf_state:
     if k not in my_state:
         continue
-    hf_w=hf_state[k]
-    my_w=my_state[k]
-    if hf_w.shape==my_w.shape:
-        new_state[k]=hf_w
-    elif hf_w.T.shape==my_w.shape:
-        new_state[k]=hf_w.T
+    
+    hf_w = hf_state[k]
+    my_w = my_state[k]
+    
+    if k.endswith(".weight") and any(x in k for x in ["c_attn", "c_proj", "c_fc"]):
+        assert hf_w.dim() == 2, f"Expected 2D weight for {k}, got {hf_w.dim()}"
+        new_state[k] = hf_w.T
+    
+    elif hf_w.shape == my_w.shape:
+        new_state[k] = hf_w
     else:
-       raise ValueError(
-          f"Shape mismatch at {k}: HF {hf_w.shape},MY {my_w.shape}"
-       )
-      
-my_model.load_state_dict(new_state, strict=False)
+        raise ValueError(f"Shape mismatch at {k}: HF {hf_w.shape}, MY {my_w.shape}")
+
+my_model.load_state_dict(new_state, strict=True) # Changed to strict=True for safety
 hf_model.eval()
 x = torch.randint(0, hf_model.config.vocab_size, (1, 10))
 
