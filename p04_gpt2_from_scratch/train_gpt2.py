@@ -110,7 +110,7 @@ for k in hf_state:
     else:
         raise ValueError(f"Shape mismatch at {k}: HF {hf_w.shape}, MY {my_w.shape}")
 
-my_model.load_state_dict(new_state, strict=True) # Changed to strict=True for safety
+my_model.load_state_dict(new_state, strict=True) 
 hf_model.eval()
 x = torch.randint(0, hf_model.config.vocab_size, (1, 10))
 
