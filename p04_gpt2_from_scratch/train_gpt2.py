@@ -162,6 +162,7 @@ for i in range(50):
     logits,loss=model(x,y)
   logits,loss=model(x,y)
   loss.backward()
+  norm=torch.nn.utils.clip_grad_norm_(model.parameters(),1.0)
   optimizer.step()
   torch.cuda.synchronize()
   print(f"step {i} loss: {loss.item()}")
