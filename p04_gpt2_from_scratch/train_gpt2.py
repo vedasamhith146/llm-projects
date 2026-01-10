@@ -1,12 +1,22 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+from dataclasses import dataclass
 
+@dataclass
+class GPT2Config:
+   block_size: int=1024
+   vocab_size: int=50257
+   n_layer: int=12
+   n_head: int=12
+   n_embd: int=768
+
+  
 class mlp(nn.Module):
-  def __init__(self,n_embd):
+  def __init__(self,config):
     super().__init__()
-    self.c_fc=nn.Linear(n_embd,n_embd*4)
-    self.c_proj=nn.Linear(n_embd*4,n_embd)
+    self.c_fc=nn.Linear(config.n_embd,config.n_embd*4)
+    self.c_proj=nn.Linear(config.n_embd*4,config.n_embd)
   def forward(self,x):
     x=self.c_fc(x)
     x=F.gelu(x,approximate='tanh')
@@ -14,14 +24,14 @@ class mlp(nn.Module):
     return x
 
 class attn(nn.Module):
-  def __init__(self,n_embd,n_head,block_size):
+  def __init__(self,config):
     super().__init__()
-    self.c_attn=nn.Linear(n_embd,n_embd*3)
-    self.c_proj=nn.Linear(n_embd,n_embd)
-    self.n_embd=n_embd
-    self.n_head=n_head
-    self.head_dim=n_embd//n_head
-    self.register_buffer("bias",torch.tril(torch.ones(block_size,block_size)).view(1,1,block_size,block_size),persistent=False)
+    self.c_attn=nn.Linear(config.n_embd,config.n_embd*3)
+    self.c_proj=nn.Linear(config.n_embd,config.n_embd)
+    self.n_embd=config.n_embd
+    self.n_head=config.n_head
+    self.head_dim=config.n_embd//config.n_head
+    self.register_buffer("bias",torch.tril(torch.ones(config.block_size,config.block_size)).view(1,1,config.block_size,config.block_size),persistent=False)
   def forward(self,x):
     B,T,C=x.size() 
     qkv=self.c_attn(x)
@@ -40,24 +50,24 @@ class attn(nn.Module):
     return out
 
 class Head(nn.Module):
-  def __init__(self,n_embd,n_head,block_size):
+  def __init__(self,config):
     super().__init__()
-    self.ln_1=nn.LayerNorm(n_embd)
-    self.attn=attn(n_embd,n_head,block_size)
-    self.ln_2=nn.LayerNorm(n_embd)
-    self.mlp=mlp(n_embd)
+    self.ln_1=nn.LayerNorm(config.n_embd)
+    self.attn=attn(config)
+    self.ln_2=nn.LayerNorm(config.n_embd)
+    self.mlp=mlp(config)
   def forward(self,x):
     x=x+self.attn(self.ln_1(x))
     x=x+self.mlp(self.ln_2(x))
     return x
 
 class transformer(nn.Module):
-  def __init__(self,vocab_size,block_size,n_embd,n_layers,n_head):
+  def __init__(self,config):
     super().__init__()
-    self.wte=nn.Embedding(vocab_size,n_embd)
-    self.wpe=nn.Embedding(block_size,n_embd)
-    self.h=nn.ModuleList([Head(n_embd,n_head,block_size) for _ in range(n_layers)])
-    self.ln_f=nn.LayerNorm(n_embd)
+    self.wte=nn.Embedding(config.vocab_size,config.n_embd)
+    self.wpe=nn.Embedding(config.block_size,config.n_embd)
+    self.h=nn.ModuleList([Head(config) for _ in range(config.n_layer)])
+    self.ln_f=nn.LayerNorm(config.n_embd)
   def forward(self,x):
     B,T=x.size()
     te=self.wte(x)
@@ -70,17 +80,19 @@ class transformer(nn.Module):
     return x
 
 class GPT2(nn.Module):
-  def __init__(self,vocab_size,block_size,n_embd,n_layers,n_head):
+  def __init__(self,config):
     super().__init__()
-    self.transformer=transformer(vocab_size,block_size,n_embd,n_layers,n_head)
-    self.lm_head=nn.Linear(n_embd,vocab_size,bias=False)
+    self.config=config
+    self.transformer=transformer(config)
+    self.lm_head=nn.Linear(config.n_embd,config.vocab_size,bias=False)
     self.lm_head.weight = self.transformer.wte.weight
   def forward(self,x):
     x=self.transformer(x)
     x=self.lm_head(x)
     return x
 
-my_model=GPT2(50257,1024,768,12,12)  
+config=GPT2Config()
+my_model=GPT2(config)  
 
 
 from transformers import GPT2LMHeadModel
