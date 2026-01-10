@@ -91,42 +91,12 @@ class GPT2(nn.Module):
     x=self.lm_head(x)
     return x
 
-config=GPT2Config()
-my_model=GPT2(config)  
-
-
-from transformers import GPT2LMHeadModel
-hf_model=GPT2LMHeadModel.from_pretrained("gpt2")
-hf_state=hf_model.state_dict()
-my_state=my_model.state_dict()
-
-
-new_state = {}
-for k in hf_state:
-    if k not in my_state:
-        continue
-    
-    hf_w = hf_state[k]
-    my_w = my_state[k]
-    
-    if k.endswith(".weight") and any(x in k for x in ["c_attn", "c_proj", "c_fc"]):
-        assert hf_w.dim() == 2, f"Expected 2D weight for {k}, got {hf_w.dim()}"
-        new_state[k] = hf_w.T
-    
-    elif hf_w.shape == my_w.shape:
-        new_state[k] = hf_w
-    else:
-        raise ValueError(f"Shape mismatch at {k}: HF {hf_w.shape}, MY {my_w.shape}")
-
-my_model.load_state_dict(new_state, strict=True) 
-x = torch.randint(0, hf_model.config.vocab_size, (1, 10))
-
-with torch.no_grad():
-    hf_logits = hf_model(x).logits
-    my_logits = my_model(x)
-
-print("Max logit diff:", (hf_logits - my_logits).abs().max())
-print(my_model.transformer.wte.weight is my_model.lm_head.weight)
+device="cpu"
+if torch.cuda.is_available():
+  device="cuda"
+elif hasattr(torch.backends,"mps") and torch.mps.is_available():
+  device="mps"
+print(f"using device {device}")
 
 
 
