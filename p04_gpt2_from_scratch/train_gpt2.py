@@ -148,7 +148,7 @@ train_loader=DataLoaderLite(B=16,T=1024)
 
 torch.set_float32_matmul_precision('high')
 
-model=GPT2(GPT2Config())
+model=GPT2(GPT2Config(vocab_size=50304))
 model.to(device)
 model=torch.compile(model)
 
