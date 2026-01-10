@@ -143,13 +143,10 @@ print(f"using device {device}")
 
 torch.manual_seed(1337)
 
-#---------------------------------------------------------------------------------------------------------------------------------
-dtype=torch.bfloat16 if hasattr(torch,'bfloat16') and device=='mps' else torch.float16
-use_scaler=(dtype==torch.float16)
-scaler=torch.amp.GradScaler('mps',enabled=use_scaler)
-#----------------------------------------------------------------------------------------------------------------------------------
-
 train_loader=DataLoaderLite(B=16,T=1024)
+
+torch.set_float32_matmul_precision('high')
+
 model=GPT2(GPT2Config())
 model.to(device)
 
@@ -158,15 +155,12 @@ for i in range(50):
   x,y=train_loader.next_batch()
   x,y=x.to(device),y.to(device)
   optimizer.zero_grad()
-  with torch.amp.autocast(device_type=device, dtype=dtype):
+  with torch.autocast(device_type=device,dtype=torch.bfloat16):
     logits,loss=model(x,y)
-  if use_scaler:
-    scaler.scale(loss).backward()
-    scaler.step(optimizer)
-    scaler.update()
-  else:
-     loss.backward()
-     optimizer.step()
+  logits,loss=model(x,y)
+  loss.backward()
+  optimizer.step()
+  torch.cuda.synchronize()
   print(f"step {i} loss: {loss.item()}")
      
 
