@@ -21,8 +21,6 @@ model.load_state_dict(state_dict)
 model.to(device)
 model.eval() 
 
-
-
 def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
     import tiktoken
     enc = tiktoken.get_encoding('gpt2')
@@ -76,5 +74,6 @@ while True:
         
     if user_input.strip() == "":
         continue
-
+    
+    model.clear_kv_cache()
     generate(user_input, max_tokens=100)
