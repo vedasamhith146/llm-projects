@@ -100,15 +100,9 @@ class CausalSelfAttention(nn.Module):
 
         k_hist=self.kvcache.get_cache()["key"]
         v_hist=self.kvcache.get_cache()["value"]
-
-        att=(q @ k_hist.transpose(-2,-1))*(1.0/math.sqrt(k.size(-1)))
         
-        if T>1:
-            mask=torch.tril(torch.ones(T,T,device=x.device)).view(1,1,T,T)
-            att=att.masked_fill(mask[:,:,:T,:T]==0,float('-inf'))
-        
-        att=F.softmax(att,dim=-1)
-        y = att @ v_hist
+        is_casual=True if T>1 else False
+        y=F.scaled_dot_product_attention(q,k_hist,v_hist,is_causal=is_casual)
         y = y.transpose(1, 2).contiguous().view(B, T, C)
         return self.c_proj(y)
 
