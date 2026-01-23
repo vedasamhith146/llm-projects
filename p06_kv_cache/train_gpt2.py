@@ -42,9 +42,9 @@ class GPT2(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets=None,start_pos=0):
         B, T = idx.size()
-        pos = torch.arange(0, T, dtype=torch.long, device=idx.device)
+        pos = torch.arange(start_pos, start_pos+T, dtype=torch.long, device=idx.device)
         x = self.transformer.wte(idx) + self.transformer.wpe(pos)
         for block in self.transformer.h: x = block(x)
         x = self.transformer.ln_f(x)
@@ -92,8 +92,6 @@ class CausalSelfAttention(nn.Module):
     def forward(self, x):
         B, T, C = x.size()
         q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
-        self.kvcache.update(k,v)
-        k,v=self.kvcache.get_cache()["key"],self.kvcache.get_cache()["value"]
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
@@ -111,7 +109,7 @@ class CausalSelfAttention(nn.Module):
         
         att=F.softmax(att,dim=-1)
         y = att @ v_hist
-        y = y.transpose(1, 2).contiguous().view(B, 1, C)
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
         return self.c_proj(y)
 
 class MLP(nn.Module):
@@ -166,8 +164,8 @@ class KVCache:
             self.cache["key"]=key
             self.cache["value"]=value
         else:
-            self.cache["key"]=torch.cat([self.cache["key"],key],dim=1)
-            self.cache["value"]=torch.cat([self.cache["value"],value],dim=1)
+            self.cache["key"]=torch.cat([self.cache["key"],key],dim=2)
+            self.cache["value"]=torch.cat([self.cache["value"],value],dim=2)
     
     def get_cache(self):
         return self.cache
