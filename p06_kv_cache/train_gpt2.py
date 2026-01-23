@@ -91,15 +91,26 @@ class CausalSelfAttention(nn.Module):
         self.n_embd = config.n_embd
     def forward(self, x):
         B, T, C = x.size()
-        x=x[:,-1:,:]
         q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
         self.kvcache.update(k,v)
         k,v=self.kvcache.get_cache()["key"],self.kvcache.get_cache()["value"]
-        q = q.view(B, 1, self.n_head, C // self.n_head).transpose(1, 2)
+        q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-        y = torch.softmax((q @ k.transpose(2,3))*((C//self.n_head)**-0.5))
-        y = y @ v
+
+        self.kvcache.update(k,v)
+
+        k_hist=self.kvcache.get_cache()["key"]
+        v_hist=self.kvcache.get_cache()["value"]
+
+        att=(q @ k_hist.transpose(-2,-1))*(1.0/math.sqrt(k.size(-1)))
+        
+        if T>1:
+            mask=torch.tril(torch.ones(T,T,device=x.device)).view(1,1,T,T)
+            att=att.masked_fill(mask[:,:,:T,:T]==0,float('-inf'))
+        
+        att=F.softmax(att,dim=-1)
+        y = att @ v_hist
         y = y.transpose(1, 2).contiguous().view(B, 1, C)
         return self.c_proj(y)
 
