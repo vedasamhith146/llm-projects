@@ -8,22 +8,12 @@ import numpy as np
 from dataclasses import dataclass
 
 
-total_batch_size = 524288 
-B = 64              
-T = 1024                  
-grad_accum_steps = total_batch_size // (B * T)
-max_steps = 19073       
-learning_rate = 6e-4
-warmup_steps = 715
-
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-torch.set_float32_matmul_precision('high') 
 
-# --- MODEL DEFINITION ---
 @dataclass
 class GPT2Config:
     block_size: int = 1024
-    vocab_size: int = 50304 # Padded for efficiency
+    vocab_size: int = 50304 
     n_layer: int = 12
     n_head: int = 12
     n_embd: int = 768
@@ -73,6 +63,10 @@ class GPT2(nn.Module):
             {'params': nondecay_params, 'weight_decay': 0.0}
         ]
         return torch.optim.AdamW(optim_groups, lr=learning_rate, betas=(0.9, 0.95), eps=1e-8, fused=True)
+
+    def clear_kv_cache(self):
+        for block in self.transformer.h:
+            block.attn.kvcache.reset()
 
 class Block(nn.Module):
     def __init__(self, config):
@@ -152,6 +146,9 @@ class KVCache:
     
     def __init__(self):
         self.cache={"key":None,"value":None}
+
+    def reset(self):
+        self.cache={"key":None,"value":None}
     
     def update(self,key,value):
         if self.cache["key"] is None:
@@ -164,71 +161,3 @@ class KVCache:
     def get_cache(self):
         return self.cache
     
-
-if __name__ == '__main__':
-    train_loader = DataLoaderLite(B=B, T=T)
-    model = GPT2(GPT2Config(vocab_size=50304))
-    model.to(device)
-
-    start_step = 0
-    checkpoint_path = "/workspace/gpt2_step_2000.pt"
-    
-    if os.path.exists(checkpoint_path):
-        print(f"Resuming from {checkpoint_path}...")
-        state_dict = torch.load(checkpoint_path, map_location=device)
-        unwanted_prefix = '_orig_mod.'
-        for k, v in list(state_dict.items()):
-            if k.startswith(unwanted_prefix):
-                state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-        model.load_state_dict(state_dict)
-        start_step = 2000
-        print(f"Success! Resuming training from step {start_step}")
-    else:
-        print("No checkpoint found. Starting from scratch.")
-
-
-    model = torch.compile(model) 
-    optimizer = model.configure_optimizers(weight_decay=0.1, learning_rate=learning_rate, device=device)
-    
-    def get_lr(it):
-        if it < warmup_steps: return learning_rate * (it + 1) / warmup_steps
-        if it > max_steps: return learning_rate * 0.1
-        decay_ratio = (it - warmup_steps) / (max_steps - warmup_steps)
-        coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio))
-        return learning_rate * 0.1 + coeff * (learning_rate * 0.9)
-
-    print("Starting training...")
-    
-
-    for step in range(start_step, max_steps):
-        t0 = time.time()
-        optimizer.zero_grad()
-        loss_accum = 0.0
-        
-        for micro_step in range(grad_accum_steps):
-            x, y = train_loader.next_batch()
-            x, y = x.to(device), y.to(device)
-            with torch.autocast(device_type=device, dtype=torch.bfloat16):
-                logits, loss = model(x, y)
-            loss = loss / grad_accum_steps
-            loss_accum += loss.detach()
-            loss.backward()
-            
-        norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-        
-        
-        lr = get_lr(step)
-        for param_group in optimizer.param_groups: param_group['lr'] = lr
-        
-        optimizer.step()
-        torch.cuda.synchronize()
-        
-        t1 = time.time()
-        dt = (t1 - t0) * 1000
-        tok_sec = (train_loader.B * train_loader.T * grad_accum_steps) / (t1 - t0)
-        print(f"step {step:4d} | loss: {loss_accum.item():.4f} | lr: {lr:.2e} | dt: {dt:.2f}ms | tok/sec: {tok_sec:.2f}")
-
-        # Save periodically
-        if step > 0 and step % 500 == 0:
-            torch.save(model.state_dict(), f"gpt2_step_{step}.pt")
-            print(f"Saved checkpoint: gpt2_step_{step}.pt")
