@@ -1,0 +1,95 @@
+import torch
+from torch.nn import functional as F
+from train_gpt2 import GPT2, GPT2Config, device 
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f"Using device: {device}")
+
+
+checkpoint_path = "gpt2_step_11500.pt" 
+
+config = GPT2Config(vocab_size=50304)
+model = GPT2(config)
+
+state_dict = torch.load(checkpoint_path, map_location=device)
+unwanted_prefix = '_orig_mod.'
+for k, v in list(state_dict.items()):
+    if k.startswith(unwanted_prefix):
+        state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
+model.load_state_dict(state_dict)
+
+model.to(device)
+model.eval() 
+
+class KVCache:
+    
+    def __init__(self):
+        self.cache={"key":None,"value":None}
+    
+    def update(self,key,value):
+        if self.cache["key"] is None:
+            self.cache["key"]=key
+            self.cache["value"]=value
+        else:
+            self.cache["key"]=torch.cat([self.cache["key"],key],dim=1)
+            self.cache["value"]=torch.cat([self.cache["value"],value],dim=1)
+    
+    def get_cache(self):
+        return self.cache
+
+
+
+def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
+    import tiktoken
+    enc = tiktoken.get_encoding('gpt2')
+    tokens = enc.encode(prompt)
+    tokens = torch.tensor(tokens, dtype=torch.long, device=device).unsqueeze(0)
+
+    print(f"\n--- Generating from prompt: '{prompt}' ---\n")
+    prev_text = enc.decode(tokens[0].tolist())
+    for _ in range(max_tokens):
+        with torch.no_grad():
+            logits, _ = model(tokens)
+            logits = logits[:, -1, :] 
+            logits/=temp
+            if top_k is not None:
+                #v, _ = torch.topk(logits, top_k)
+                v,_=torch.sort(logits,descending=True)
+                v=v[:,:top_k]
+                logits[logits < v[:, [-1]]] = -float('Inf')
+            probs = F.softmax(logits, dim=-1)
+            if top_p is not None:
+                sorted_probs,sorted_indices=torch.sort(probs,descending=True)
+                cumm_probs=torch.cumsum(sorted_probs,dim=-1)
+                sorted_indices_to_remove=cumm_probs>top_p
+                sorted_indices_to_remove[:,1:]=sorted_indices_to_remove[:,:-1].clone()
+                sorted_indices_to_remove[:, 0] = False
+                sorted_indices_remove=sorted_indices[sorted_indices_to_remove]
+                logits[0,sorted_indices_remove]=-float('Inf')
+                probs=F.softmax(logits,dim=-1)
+            #probs,indices=torch.sort(probs,descending=True)
+            #indices=indices[0,0]
+            #for k in range(10):
+                #if indices[0,k].item()>50257:
+                    #continue
+            next_token = torch.multinomial(probs, num_samples=1)
+            #next_token=indices.unsqueeze(0).unsqueeze(0)
+            tokens = torch.cat((tokens, next_token), dim=1)
+            text=enc.decode(tokens[0].tolist())
+            #print(text)
+            print(text[len(prev_text):], end='', flush=True)
+            prev_text=text
+    print("\n\n--- End ---")
+
+print("Model loaded! Type your prompt below (or type 'exit' to quit).")
+
+while True:
+    user_input = input("\nPrompt: ")
+    
+    if user_input.lower() in ['exit', 'quit']:
+        break
+        
+    if user_input.strip() == "":
+        continue
+
+    generate(user_input, max_tokens=100)
