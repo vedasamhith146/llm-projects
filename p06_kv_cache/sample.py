@@ -21,22 +21,6 @@ model.load_state_dict(state_dict)
 model.to(device)
 model.eval() 
 
-class KVCache:
-    
-    def __init__(self):
-        self.cache={"key":None,"value":None}
-    
-    def update(self,key,value):
-        if self.cache["key"] is None:
-            self.cache["key"]=key
-            self.cache["value"]=value
-        else:
-            self.cache["key"]=torch.cat([self.cache["key"],key],dim=1)
-            self.cache["value"]=torch.cat([self.cache["value"],value],dim=1)
-    
-    def get_cache(self):
-        return self.cache
-
 
 
 def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
@@ -46,6 +30,7 @@ def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
     tokens = torch.tensor(tokens, dtype=torch.long, device=device).unsqueeze(0)
 
     print(f"\n--- Generating from prompt: '{prompt}' ---\n")
+
     prev_text = enc.decode(tokens[0].tolist())
     for _ in range(max_tokens):
         with torch.no_grad():
