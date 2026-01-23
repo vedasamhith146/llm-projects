@@ -29,18 +29,44 @@ def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
 
     print(f"\n--- Generating from prompt: '{prompt}' ---\n")
 
-    prev_text = enc.decode(tokens[0].tolist())
-    for _ in range(max_tokens):
+    with torch.no_grad():
+        logits,_=model(tokens)
+    
+    logits=logits[:,-1,:]/temp
+    if top_k is not None:
+        v,_=torch.sort(logits,descending=True)
+        v=v[:,:top_k]
+        logits[logits < v[:, [-1]]] = -float('Inf')
+    probs = F.softmax(logits, dim=-1)
+
+    if top_p is not None:
+        sorted_probs,sorted_indices=torch.sort(probs,descending=True)
+        cumm_probs=torch.cumsum(sorted_probs,dim=-1)
+        sorted_indices_to_remove=cumm_probs>top_p
+        sorted_indices_to_remove[:,1:]=sorted_indices_to_remove[:,:-1].clone()
+        sorted_indices_to_remove[:, 0] = False
+        sorted_indices_remove=sorted_indices[sorted_indices_to_remove]
+        logits[0,sorted_indices_remove]=-float('Inf')
+        probs=F.softmax(logits,dim=-1)
+        
+    next_token = torch.multinomial(probs, num_samples=1)
+    tokens = torch.cat((tokens, next_token), dim=1)
+    text=enc.decode(tokens[0].tolist())
+    prev_text = enc.decode(tokens[0, :-1].tolist()) 
+    print(text[len(prev_text):], end='', flush=True)
+    prev_text = text
+
+    for _ in range(max_tokens-1):
         with torch.no_grad():
-            logits, _ = model(tokens)
-            logits = logits[:, -1, :] 
-            logits/=temp
+            logits, _ = model(next_token)
+            logits = logits[:, -1, :]/temp
+
             if top_k is not None:
-                #v, _ = torch.topk(logits, top_k)
                 v,_=torch.sort(logits,descending=True)
                 v=v[:,:top_k]
                 logits[logits < v[:, [-1]]] = -float('Inf')
             probs = F.softmax(logits, dim=-1)
+
             if top_p is not None:
                 sorted_probs,sorted_indices=torch.sort(probs,descending=True)
                 cumm_probs=torch.cumsum(sorted_probs,dim=-1)
@@ -50,13 +76,8 @@ def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
                 sorted_indices_remove=sorted_indices[sorted_indices_to_remove]
                 logits[0,sorted_indices_remove]=-float('Inf')
                 probs=F.softmax(logits,dim=-1)
-            #probs,indices=torch.sort(probs,descending=True)
-            #indices=indices[0,0]
-            #for k in range(10):
-                #if indices[0,k].item()>50257:
-                    #continue
+
             next_token = torch.multinomial(probs, num_samples=1)
-            #next_token=indices.unsqueeze(0).unsqueeze(0)
             tokens = torch.cat((tokens, next_token), dim=1)
             text=enc.decode(tokens[0].tolist())
             #print(text)
