@@ -21,7 +21,7 @@ model.load_state_dict(state_dict)
 model.to(device)
 model.eval() 
 
-def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
+def generate(prompt, max_tokens=1,top_k=50,top_p=0.9,temp=1.0):
     import tiktoken
     enc = tiktoken.get_encoding('gpt2')
     tokens = enc.encode(prompt)
@@ -57,8 +57,9 @@ def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
     prev_text = text
 
     for _ in range(max_tokens-1):
+        current_pos=tokens.size(1)
         with torch.no_grad():
-            logits, _ = model(next_token)
+            logits, _ = model(next_token,start_pos=current_pos)
             logits = logits[:, -1, :]/temp
 
             if top_k is not None:
