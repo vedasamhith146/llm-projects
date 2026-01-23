@@ -89,6 +89,7 @@ class Block(nn.Module):
 class CausalSelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
+        self.kvcache=KVCache()
         self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd)
         self.c_proj = nn.Linear(config.n_embd, config.n_embd)
         self.c_proj.NANOGPT_SCALE_INIT = 1.0
@@ -96,12 +97,16 @@ class CausalSelfAttention(nn.Module):
         self.n_embd = config.n_embd
     def forward(self, x):
         B, T, C = x.size()
+        x=x[:,-1:,:]
         q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
-        q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
+        self.kvcache.update(k,v)
+        k,v=self.kvcache.get_cache()["key"],self.kvcache.get_cache()["value"]
+        q = q.view(B, 1, self.n_head, C // self.n_head).transpose(1, 2)
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-        y = F.scaled_dot_product_attention(q, k, v, is_causal=True)
-        y = y.transpose(1, 2).contiguous().view(B, T, C)
+        y = torch.softmax((q @ k.transpose(2,3))*((C//self.n_head)**-0.5))
+        y = y @ v
+        y = y.transpose(1, 2).contiguous().view(B, 1, C)
         return self.c_proj(y)
 
 class MLP(nn.Module):
@@ -158,7 +163,7 @@ class KVCache:
     
     def get_cache(self):
         return self.cache
-
+    
 
 if __name__ == '__main__':
     train_loader = DataLoaderLite(B=B, T=T)
