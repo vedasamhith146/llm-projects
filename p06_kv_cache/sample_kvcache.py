@@ -1,6 +1,8 @@
 import torch
 from torch.nn import functional as F
 from model_kvcache import GPT2, GPT2Config, device 
+import tiktoken
+enc=tiktoken.get_encoding('gpt2')
 
 if torch.backends.mps.is_available():
     device=torch.device("mps")
