@@ -1,6 +1,6 @@
 import torch
 from torch.nn import functional as F
-from train_gpt2 import GPT2, GPT2Config, device 
+from model_kvcache import GPT2, GPT2Config, device 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"Using device: {device}")
@@ -21,7 +21,7 @@ model.load_state_dict(state_dict)
 model.to(device)
 model.eval() 
 
-def generate(prompt, max_tokens=1,top_k=50,top_p=0.9,temp=1.0):
+def generate(prompt, max_tokens=100,top_k=50,top_p=0.9,temp=1.0):
     import tiktoken
     enc = tiktoken.get_encoding('gpt2')
     tokens = enc.encode(prompt)
