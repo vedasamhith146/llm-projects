@@ -2,9 +2,12 @@ import torch
 from torch.nn import functional as F
 from model import GPT2, GPT2Config, device 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(f"Using device: {device}")
-
+if torch.backends.mps.is_available():
+    device=torch.device("mps")
+    print(f"Using Device: MPS")
+else:
+    device=torch.device("cpu")
+    print(f"Using Device:CPU")
 
 checkpoint_path = "gpt2_step_11500.pt" 
 
