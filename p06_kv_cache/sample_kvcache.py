@@ -61,7 +61,7 @@ def generate(prompt, max_tokens=100,top_k=50,top_p=0.9,temp=1.0):
     prev_text = text
 
     for _ in range(max_tokens-1):
-        current_pos=tokens.size(1)
+        current_pos=tokens.size(1)-1
         with torch.no_grad():
             logits, _ = model(next_token,start_pos=current_pos)
             logits = logits[:, -1, :]/temp
