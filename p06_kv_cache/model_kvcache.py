@@ -116,34 +116,6 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.c_proj(self.gelu(self.c_fc(x)))
 
-class DataLoaderLite:
-    def __init__(self, B, T):
-        self.B, self.T = B, T
-        files = sorted([x for x in os.listdir('.') if x.endswith('.bin')])
-        if len(files) == 0: 
-            print("WARNING: No .bin files found. Did you run fineweb.py?")
-        self.shards = files
-        self.reset()
-
-    def reset(self):
-        self.shard_idx = 0
-        self.tokens = self.load_tokens(self.shards[self.shard_idx])
-        self.pos = 0
-
-    def load_tokens(self, filename):
-        npt = np.fromfile(filename, dtype=np.uint16)
-        return torch.tensor(npt.astype(np.int64), dtype=torch.long)
-
-    def next_batch(self):
-        B, T = self.B, self.T
-        if self.pos + B * T + 1 > len(self.tokens):
-            self.shard_idx = (self.shard_idx + 1) % len(self.shards)
-            self.tokens = self.load_tokens(self.shards[self.shard_idx])
-            self.pos = 0
-        buf = self.tokens[self.pos : self.pos+B*T+1]
-        x, y = buf[:-1].view(B, T), buf[1:].view(B, T)
-        self.pos += B * T
-        return x, y
     
 class KVCache:
     
