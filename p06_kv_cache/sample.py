@@ -21,7 +21,7 @@ model.load_state_dict(state_dict)
 model.to(device)
 model.eval() 
 
-def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
+def generate(prompt, max_tokens=1,top_k=50,top_p=0.9,temp=1.0):
     import tiktoken
     enc = tiktoken.get_encoding('gpt2')
     tokens = enc.encode(prompt)
