@@ -56,15 +56,17 @@ def generate(prompt, max_tokens=1,top_k=50,top_p=0.9,temp=1.0):
             prev_text=text
     print("\n\n--- End ---")
 
-print("Model loaded! Type your prompt below (or type 'exit' to quit).")
+if __name__ == "__main__":
 
-while True:
-    user_input = input("\nPrompt: ")
-    
-    if user_input.lower() in ['exit', 'quit']:
-        break
+    print("Model loaded! Type your prompt below (or type 'exit' to quit).")
+
+    while True:
+        user_input = input("\nPrompt: ")
         
-    if user_input.strip() == "":
-        continue
+        if user_input.lower() in ['exit', 'quit']:
+            break
+            
+        if user_input.strip() == "":
+            continue
 
-    generate(user_input, max_tokens=100)
+        generate(user_input, max_tokens=100)
