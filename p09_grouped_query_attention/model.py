@@ -16,6 +16,7 @@ class GPT2Config:
     n_layer: int = 12
     n_head: int = 12
     n_embd: int = 768
+    n_kv_head: int=4
 
 class GPT2(nn.Module):
     def __init__(self, config):
@@ -62,6 +63,10 @@ class GPT2(nn.Module):
             {'params': nondecay_params, 'weight_decay': 0.0}
         ]
         return torch.optim.AdamW(optim_groups, lr=learning_rate, betas=(0.9, 0.95), eps=1e-8, fused=True)
+    
+    def clear_kv_cache(self):
+        for block in self.transformer.h:
+            block.attn.kvcache.reset()
 
 class Block(nn.Module):
     def __init__(self, config):
@@ -78,18 +83,31 @@ class Block(nn.Module):
 class CausalSelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd)
+        self.kvcache=KVCache()
+        self.c_attn = nn.Linear(config.n_embd, config.n_embd+(2*config.n_embd*config.n_kv_head)/(config.n_head))
         self.c_proj = nn.Linear(config.n_embd, config.n_embd)
         self.c_proj.NANOGPT_SCALE_INIT = 1.0
         self.n_head = config.n_head
         self.n_embd = config.n_embd
+        self.head_dim=self.n_embd//self.n_head
+        self.n_kv_head=config.n_kv_head
+        self.groups=self.n_head//self.n_kv_head
+        self.kv_dim=self.n_kv_head*self.head_dim
     def forward(self, x):
         B, T, C = x.size()
-        q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
-        q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-        k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-        v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-        y = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+        q, k, v  = self.c_attn(x).split((self.n_embd,self.kv_dim,self.kv_dim), dim=2)
+        q = q.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
+        k = k.view(B, T, self.n_kv_head, self.head_dim).transpose(1,2)
+        v = v.view(B, T, self.n_kv_head, self.head_dim).transpose(1,2)
+        self.kvcache.update(k,v)
+        k_hist=self.kvcache.get_cache()["key"]
+        v_hist=self.kvcache.get_cache()["value"]
+
+        k=torch.repeat_interleave(k_hist,repeats=self.groups,dim=1)
+        v=torch.repeat_interleave(v_hist,repeats=self.groups,dim=1)
+
+        is_casual=True if T>1 else False
+        y = F.scaled_dot_product_attention(q, k, v, is_causal=is_casual)
         y = y.transpose(1, 2).contiguous().view(B, T, C)
         return self.c_proj(y)
 
@@ -102,4 +120,24 @@ class MLP(nn.Module):
         self.c_proj.NANOGPT_SCALE_INIT = 1.0
     def forward(self, x):
         return self.c_proj(self.gelu(self.c_fc(x)))
+    
+
+class KVCache:
+    
+    def __init__(self):
+        self.cache={"key":None,"value":None}
+
+    def reset(self):
+        self.cache={"key":None,"value":None}
+    
+    def update(self,key,value):
+        if self.cache["key"] is None:
+            self.cache["key"]=key
+            self.cache["value"]=value
+        else:
+            self.cache["key"]=torch.cat([self.cache["key"],key],dim=2)
+            self.cache["value"]=torch.cat([self.cache["value"],value],dim=2)
+    
+    def get_cache(self):
+        return self.cache
 
