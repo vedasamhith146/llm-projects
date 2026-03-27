@@ -1,4 +1,4 @@
-# 🚀 Custom LLM Architecture & Pre-training Engine
+#  Custom LLM Architecture & Pre-training Engine
 
 Welcome to my active research repository. This workspace contains a complete, from-scratch implementation of modern Large Language Model architectures, optimizations, and an end-to-end 124M parameter pre-training pipeline.
 
@@ -6,7 +6,7 @@ Welcome to my active research repository. This workspace contains a complete, fr
 
 ---
 
-## 1. 🧠 Large Language Model Pre-training (GPT-2 124M)
+## 1.  Large Language Model Pre-training (GPT-2 124M)
 **Folders:** `p04_gpt2_from_scratch`, `p11_pretraining_objectives`
 
 An end-to-end pipeline for pre-training a custom GPT-2 model. 
@@ -15,7 +15,7 @@ An end-to-end pipeline for pre-training a custom GPT-2 model.
 * **Milestone:** Successfully trained for 11.5k steps (~0.6 epochs) before hitting compute limits. Model successfully generates coherent text.
 * **Current Focus:** Architecting Supervised Fine-Tuning (SFT) and Reinforcement Learning from Verifiable Rewards (RLVR) pipelines.
 
-*(Drag and drop a screenshot of your WandB loss curve or terminal output here)*
+*> Note: Full training loss logs were lost due to an ephemeral cloud GPU instance termination. However, model checkpoints up to step 11.5k (~0.6 epochs) were successfully salvaged. While the model has not yet reached full convergence due to compute budget limits, early sample generations demonstrate it is successfully learning basic English syntax, vocabulary, and structure.*
 
 ---
 
