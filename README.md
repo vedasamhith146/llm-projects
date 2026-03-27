@@ -1,70 +1,41 @@
-# LLM Projects
+# 🚀 Custom LLM Architecture & Pre-training Engine
 
-A collection of 16 hands-on LLM engineering projects.
+Welcome to my active research repository. This workspace contains a complete, from-scratch implementation of modern Large Language Model architectures, optimizations, and an end-to-end 124M parameter pre-training pipeline.
 
-Each folder (`01-...` to `16-...`) is one self-contained mini-project that focuses on a single core concept:
-build → plot → break → learn.
-
----
-
-## Project Index
-
-### 01 — Tokenization & Embeddings
-Build a simple tokenizer (e.g. BPE), map text to token IDs, and compare one-hot vs learned embeddings using cosine similarity.
-
-### 02 — Positional Embeddings
-Experiment with different positional schemes (sinusoidal, learned, RoPE, ALiBi) and see how removing positions breaks attention.
-
-### 03 — Self-Attention & Multi-Head Attention
-Implement dot-product attention for a single token, scale to multi-head attention, and visualize attention weight heatmaps with causal masking.
-
-### 04 — Transformers, QKV & Stacking
-Combine attention, residual connections, and normalization into a transformer block, stack multiple blocks into a “mini-former”, and experiment with Q/K/V roles.
-
-### 05 — Sampling Parameters: Temperature / Top-k / Top-p
-Build a small sampling playground to see how temperature, top-k, and top-p change entropy, diversity, and repetition in generated text.
-
-### 06 — KV Cache (Fast Inference)
-Implement key/value caching for autoregressive generation and measure the speed/memory trade-offs for different sequence lengths.
-
-### 07 — Long-Context Tricks
-Explore sliding-window or other long-context attention tricks, measure loss/perplexity vs context length, and find where performance collapses.
-
-### 08 — Mixture of Experts (MoE)
-Add a simple router with two or more experts, visualize expert usage, and compare sparse vs dense compute (FLOPs and quality).
-
-### 09 — Grouped Query Attention (GQA)
-Convert a mini-transformer to grouped query attention and measure speed/latency vs standard multi-head attention.
-
-### 10 — Normalization & Activations
-Implement LayerNorm, RMSNorm, GELU, SwiGLU, etc., and ablate them to see the effect on training stability, loss, and activation distributions.
-
-### 11 — Pretraining Objectives
-Compare masked LM, causal LM, and prefix LM on toy text data, looking at loss curves and sample quality from each objective.
-
-### 12 — Finetuning vs Instruction Tuning vs RLHF
-Fine-tune a base model on tasks, instruction-tune with formatted prompts, and run a tiny RLHF-style loop with a reward model + PPO steps.
-
-### 13 — Scaling Laws & Model Capacity
-Train tiny/small/medium models on the same dataset and plot loss vs model size, as well as VRAM usage, throughput, and training time.
-
-### 14 — Quantization
-Apply post-training quantization (PTQ) and/or quantization-aware training (QAT), export to common formats, and plot accuracy vs model size.
-
-### 15 — Inference / Training Stacks
-Run the same model across different inference/training stacks (e.g. DeepSpeed, vLLM, ExLlama) and compare throughput, VRAM, and latency.
-
-### 16 — Synthetic Data
-Generate synthetic datasets, add noise and deduplication, create eval splits, and compare learning curves on real vs synthetic data.
+🔗 **Read my deep-dive technical articles on Medium:** [Insert Link to Medium Profile]
 
 ---
 
-## Layout
+## 1. 🧠 Large Language Model Pre-training (GPT-2 124M)
+**Folders:** `p04_gpt2_from_scratch`, `p11_pretraining_objectives`
 
-```text
-llm-projects/
-  01-tokenization-embeddings/
-  02-positional-embeddings/
-  ...
-  16-synthetic-data/
-  README.md
+An end-to-end pipeline for pre-training a custom GPT-2 model. 
+* **Dataset:** FineWeb-Edu
+* **Infrastructure:** Cloud GPUs [Specify GPU]
+* **Milestone:** Successfully trained for 11.5k steps (~0.6 epochs) before hitting compute limits. Model successfully generates coherent text.
+* **Current Focus:** Architecting Supervised Fine-Tuning (SFT) and Reinforcement Learning from Verifiable Rewards (RLVR) pipelines.
+
+*(Drag and drop a screenshot of your WandB loss curve or terminal output here)*
+
+---
+
+## 2. ⚙️ Advanced Architecture & Optimizations
+**Folders:** `p01` to `p03`, `p04_transformers_qkv_stacking`, `p08_moe`, `p09_grouped_query_attention`, `p10_normalization_activations`
+
+A comprehensive framework building Transformer components from the ground up to understand mathematical mechanics and hardware efficiency.
+* **Core:** Byte-Pair Encoding (BPE), Causal Multi-head Attention, SwiGLU, RMSNorm.
+* **Efficiency:** Implemented a dynamic 2-expert Mixture of Experts (MoE) routing layer and Grouped Query Attention (GQA).
+* **Ablation Studies:** Conducted rigorous ablations on positional embeddings (RoPE, ALiBi, Sinusoidal) to visualize attention collapse.
+
+*(Drag and drop your coolest attention heatmap or ablation plot here)*
+
+---
+
+## 3. 🎛️ Inference, Sampling & Caching
+**Folders:** `p05_sampling_topk_topp`, `p06_kv_cache`
+
+Tools and optimizations for text generation and inference latency.
+* **Interactive Dashboard:** Built a Streamlit application to visualize the mathematical impact of temperature, top-k, and top-p sampling, plotting entropy vs. output diversity.
+* **KV Cache:** Custom implementation to measure $O(N)$ memory growth and inference speedups.
+
+*(Drag and drop a screenshot of your Streamlit dashboard or entropy plot here)*
