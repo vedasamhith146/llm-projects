@@ -2,7 +2,7 @@
 
 Welcome to my active research repository. This workspace contains a complete, from-scratch implementation of modern Large Language Model architectures, optimizations, and an end-to-end 124M parameter pre-training pipeline.
 
-🔗 **Read my deep-dive technical articles on Medium:** [Insert Link to Medium Profile]
+🔗 **Read my deep-dive technical articles on Medium:** https://medium.com/@githubveda
 
 ---
 
