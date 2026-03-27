@@ -33,11 +33,13 @@ A comprehensive framework building Transformer components from the ground up to 
 * **Efficiency:** Implemented a dynamic 2-expert Mixture of Experts (MoE) routing layer and Grouped Query Attention (GQA).
 * **Ablation Studies:** Conducted rigorous ablations on positional embeddings (RoPE, ALiBi, Sinusoidal) to visualize attention collapse.
 
-*(Drag and drop your coolest attention heatmap or ablation plot here)*
+*<img width="998" height="600" alt="Screenshot 2026-03-27 at 7 13 11 PM" src="https://github.com/user-attachments/assets/51f51c1f-0ec2-40f5-a436-31c00700bd0d" />
+*
+*(Above: Expert Utilization histogram for the custom Top-2 MoE routing layer, demonstrating successful load balancing and avoidance of routing collapse across 8 simulated experts).*
 
 ---
 
-## 3. 🎛️ Inference, Sampling & Caching
+## 3. Inference, Sampling & Caching
 **Folders:** `p05_sampling_topk_topp`, `p06_kv_cache`
 
 Tools and optimizations for text generation and inference latency.
