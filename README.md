@@ -17,10 +17,15 @@ An end-to-end pipeline for pre-training a custom GPT-2 model.
 
 *> Note: Full training loss logs were lost due to an ephemeral cloud GPU instance termination. However, model checkpoints up to step 11.5k (~0.6 epochs) were successfully salvaged. While the model has not yet reached full convergence due to compute budget limits, early sample generations demonstrate it is successfully learning basic English syntax, vocabulary, and structure.*
 
+<img width="1378" height="169" alt="Screenshot 2026-03-27 at 6 55 20 PM" src="https://github.com/user-attachments/assets/8f12f971-d0d3-410a-8fce-5e9b53b97327" />
+<img width="1373" height="145" alt="Screenshot 2026-03-27 at 7 01 55 PM" src="https://github.com/user-attachments/assets/c620ebc3-c925-4470-8684-e0ff96db4371" />
+<img width="1363" height="149" alt="Screenshot 2026-03-27 at 7 03 32 PM" src="https://github.com/user-attachments/assets/caec0052-8b48-4d4b-8dc2-00623b24b94c" />
+<img width="1371" height="111" alt="Screenshot 2026-03-27 at 7 04 49 PM" src="https://github.com/user-attachments/assets/c64ba835-b03a-443c-96fb-4f676901143a" />
+
 
 ---
 
-## 2. ⚙️ Advanced Architecture & Optimizations
+## 2.  Advanced Architecture & Optimizations
 **Folders:** `p01` to `p03`, `p04_transformers_qkv_stacking`, `p08_moe`, `p09_grouped_query_attention`, `p10_normalization_activations`
 
 A comprehensive framework building Transformer components from the ground up to understand mathematical mechanics and hardware efficiency.
