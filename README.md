@@ -46,4 +46,6 @@ Tools and optimizations for text generation and inference latency.
 * **Interactive Dashboard:** Built a Streamlit application to visualize the mathematical impact of temperature, top-k, and top-p sampling, plotting entropy vs. output diversity.
 * **KV Cache:** Custom implementation to measure $O(N)$ memory growth and inference speedups.
 
-*(Drag and drop a screenshot of your Streamlit dashboard or entropy plot here)*
+*<img width="492" height="317" alt="Screenshot 2026-03-27 at 7 21 46 PM" src="https://github.com/user-attachments/assets/78fdc121-4714-4022-b53a-6286b23fa373" />
+*
+*(Above: Empirical memory profiling demonstrating $O(N)$ linear scaling of the custom KV Cache, achieving a sustained VRAM cost of 70.38KB per generated token).*
