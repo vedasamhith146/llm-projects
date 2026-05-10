@@ -32,7 +32,8 @@ def generate(model,prompt, max_tokens,top_k,top_p,temp):
 
     for _ in range(max_tokens):
         with torch.no_grad():
-            logits, _ = model(tokens)
+            tokens_cond=tokens[:,-1024:]
+            logits, _ = model(tokens_cond)
             logits = logits[:, -1, :] 
 
             if temp==0:
@@ -68,15 +69,16 @@ def generate(model,prompt, max_tokens,top_k,top_p,temp):
 
     return generated_text,tokens_entropy_history
 
-#print("Model loaded! Type your prompt below (or type 'exit' to quit).")
+print("Model loaded! Type your prompt below (or type 'exit' to quit).")
 
-#while True:
-    #user_input = input("\nPrompt: ")
+while True:
+    user_input = input("\nPrompt: ")
     
-    #if user_input.lower() in ['exit', 'quit']:
-        #break
+    if user_input.lower() in ['exit', 'quit']:
+        break
         
-    #if user_input.strip() == "":
-        #continue
+    if user_input.strip() == "":
+        continue
 
-    #generate(model,user_input, 100,None,0.9,1.5)
+    text,entropy=generate(model,user_input, 120,40,0.9,0.8)
+    print("\nGenerated:\n",text)

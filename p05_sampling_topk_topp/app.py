@@ -5,20 +5,27 @@ from train_gpt2 import GPT2,GPT2Config,device
 from sample import generate
 import torch
 
-config=GPT2Config(vocab_size=50304)
-model=GPT2(config)
-checkpoint_path = "gpt2_step_11500.pt" 
-state_dict = torch.load(checkpoint_path, map_location=device)
-unwanted_prefix = '_orig_mod.'
-for k, v in list(state_dict.items()):
-    if k.startswith(unwanted_prefix):
-        state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-model.load_state_dict(state_dict)
-
-model.to(device)
-model.eval() 
-
 st.title("LLM Sample Dashboard")
+st.write("Loading model weights...please wait")
+
+@st.cache_resource
+def load_model():
+    config=GPT2Config(vocab_size=50304)
+    model=GPT2(config)
+    checkpoint_path = "gpt2_step_11500.pt" 
+    state_dict = torch.load(checkpoint_path, map_location=device)
+    unwanted_prefix = '_orig_mod.'
+    for k, v in list(state_dict.items()):
+        if k.startswith(unwanted_prefix):
+            state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
+    model.load_state_dict(state_dict)
+
+    model.to(device)
+    model.eval() 
+    return model
+
+model = load_model()
+st.success("Model loaded successfully!")
 
 st.sidebar.header("Parameters")
 temp=st.sidebar.slider("Temparature",0.0,2.0,1.0,step=0.1)

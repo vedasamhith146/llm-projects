@@ -10,7 +10,7 @@ import tiktoken
 from contextlib import nullcontext
 
 total_batch_size = 8192
-B = 8           
+B = 2  
 T = 512               
 grad_accum_steps = total_batch_size // (B * T)
 max_steps = 3000     
@@ -130,19 +130,51 @@ class DataLoaderLite:
         enc=tiktoken.get_encoding('gpt2')
         with open(filename,"r",encoding='utf-8') as f:
             text=f.read()
-        tokens=enc.encode(text)
-        self.tokens=torch.tensor(tokens,dtype=torch.long)
-        print(f"Loaded {len(self.tokens)} tokens")
+        examples=text.split("\n\n")
+        self.inputs=[]
+        self.targets=[]
+        for ex in examples:
+            ex=ex.strip()
+            if not ex:
+                continue
+            if "Response:" not in ex:
+                continue
+            instruction, response=ex.split("Response:",1)
+            instruction=instruction.strip()
+            response=response.strip()
+            full_text=instruction+"\nResponse:"+response
+            tokens=enc.encode(full_text)
+            instr_tokens=enc.encode(instruction+"\nResponse:")
+            targets=tokens.copy()
+
+            for i in range(len(instr_tokens)):
+                targets[i]=-100
+            self.inputs.append(torch.tensor(tokens[:-1],dtype=torch.long))
+            self.targets.append(torch.tensor(targets[1:],dtype=torch.long))
+        print(f"Loaded {len(self.inputs)} instruction examples")
         self.pos=0
     def next_batch(self):
         B,T=self.B,self.T
-        if self.pos + B*T+1>=len(self.tokens):
-            self.pos=0
-        buf=self.tokens[self.pos:self.pos+B*T+1]
-        x=buf[:-1].view(B,T)
-        y=buf[1:].view(B,T)
 
-        self.pos+=B*T
+        xs=[]
+        ys=[]
+        for _ in range(B):
+            x=self.inputs[self.pos]
+            y=self.targets[self.pos]
+
+            if len(x)<T:
+                pad=T-len(x)
+                x=torch.cat([x,torch.zeros(pad,dtype=torch.long)])
+                y=torch.cat([y,torch.full((pad,),-100,dtype=torch.long)])
+            else:
+                x=x[:T]
+                y=y[:T]
+            xs.append(x)
+            ys.append(y)
+
+            self.pos=(self.pos+1)%len(self.inputs)
+        x=torch.stack(xs)
+        y=torch.stack(ys)
         return x,y
     
 
@@ -154,7 +186,7 @@ if __name__ == '__main__':
     checkpoint_path = "gpt2_step_11500.pt"
     
     if os.path.exists(checkpoint_path):
-        print(f"Resuming from {checkpoint_path}...")
+        print(f"Loading pretrained weights from {checkpoint_path}...")
         state_dict = torch.load(checkpoint_path, map_location=device)
         unwanted_prefix = '_orig_mod.'
         for k, v in list(state_dict.items()):
@@ -205,6 +237,8 @@ if __name__ == '__main__':
         for param_group in optimizer.param_groups: param_group['lr'] = lr
         
         optimizer.step()
+        if device=="mps":
+            torch.mps.empty_cache()
         if device=="cuda":
             torch.cuda.synchronize()
         

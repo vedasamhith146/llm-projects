@@ -80,5 +80,5 @@ while True:
     if user_input.strip() == "":
         continue
 
-    text,entropy=generate(model,user_input, 120,40,0.9,0.8)
+    text,entropy=generate(model,user_input, 50,40,0.9,0.8)
     print("\nGenerated:\n",text)
