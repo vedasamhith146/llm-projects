@@ -1,6 +1,8 @@
-import torch
-p=torch.tensor([[10,9,8,7,6]])
-cumm_p=torch.cumsum(p,dim=-1)
-c=cumm_p>18
-c[:,1:]=c[:,:-1].clone()
-print(c)
+from transformers import GPT2LMHeadModel
+
+# Load GPT-2 (124M)
+model = GPT2LMHeadModel.from_pretrained("gpt2")
+
+# Print all named parameters
+for name, param in model.named_parameters():
+    print(name, param.shape)

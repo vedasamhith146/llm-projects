@@ -6,7 +6,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"Using device: {device}")
 
 
-checkpoint_path = "gpt2_step_11500.pt" 
+checkpoint_path = "gpt2_step_10000.pt" 
 
 config = GPT2Config(vocab_size=50304)
 model = GPT2(config)
