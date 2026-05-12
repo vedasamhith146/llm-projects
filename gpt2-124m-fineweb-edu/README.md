@@ -1,4 +1,4 @@
-# GPT-2 124M Pretrained on Fineweb-edu
+# GPT-2 124M Pretrained on Fineweb-Edu
 
 Reproduction of GPT-2 (124M parameters ) pretrained on the 
 [Fineweb-edu](https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu) dataset
@@ -6,11 +6,11 @@ using a single NVIDIA RTX 5090 GPU
 
 This project closely follows the architecture and training methodology from
 [Andrej Karpathy's nanoGPT](https://github.com/karpathy/build-nanogpt), adapted
-for single - GPU training
+for single-GPU training
 
 ## Results
 
-Evaluated at training step **11,500** out of planned 19073.
+Evaluated at training step **11,500** out of a planned 19073.
 
 | Metric | Value | Notes |
 |--------|-------|-------|
@@ -77,6 +77,22 @@ trained for only **~60% of the planned steps** (11,500 / 19,073).
 |-----------|------|
 | GPU | NVIDIA RTX 5090 (32 GB VRAM) |
 | RAM | 60 GB |
+
+## Notes
+
+Training was stopped early at step 11,500 (out of 19,073) due to time constraints. With the remaining steps, the model would likely match or exceed the original GPT-2 124M baseline.
+
+Training loss logs were lost due to a session termination. The reported train and validation losses were computed post training from the saved checkpoint.
+
+No formal validation split was created during preprocessing. The validation metric was computed on shard 099 of the training data, which was never seen during training (training only consumed ~60 shards).
+
+HellaSwag evaluation was done using length-normalized cross-entropy on the full validation split (10,042 examples), following the standard methodology.
+
+## Acknowledgments
+
+- [Andrej Karpathy](https://github.com/karpathy/build-nanogpt) — methodology
+- [HuggingFace](https://huggingface.co/HuggingFaceFW) — FineWeb-Edu dataset
+- [Rowan Zellers et al.](https://rowanzellers.com/hellaswag/) — HellaSwag benchmark
 
 
 
