@@ -94,6 +94,10 @@ HellaSwag evaluation was done using length-normalized cross-entropy on the full 
 - [HuggingFace](https://huggingface.co/HuggingFaceFW) — FineWeb-Edu dataset
 - [Rowan Zellers et al.](https://rowanzellers.com/hellaswag/) — HellaSwag benchmark
 
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
 
 
 
