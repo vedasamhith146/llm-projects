@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from train_gpt2 import GPT2,GPT2Config
 import tiktoken
+import time
 
 device='mps' if torch.backends.mps.is_available() else 'cpu'
 
@@ -17,9 +18,8 @@ model.to(device)
 
 model.load_state_dict(state_dict)
 
-prompt="The future of artificial intelligence is"
-
 enc=tiktoken.get_encoding('gpt2')
+
 
 def next_token_generator(logits,temp,top_k,top_p):
     if temp==0:
@@ -50,10 +50,6 @@ def next_token_generator(logits,temp,top_k,top_p):
     next_token=torch.multinomial(probs,num_samples=1)
     return next_token
     
-    
-        
-
-
 
 def generate_text(prompt,max_new_tokens,temp=0.7,top_k=50,top_p=0.90):
 
@@ -67,7 +63,7 @@ def generate_text(prompt,max_new_tokens,temp=0.7,top_k=50,top_p=0.90):
             logits=logits[:,-1,:]   
             next_token=next_token_generator(logits,temp=temp,top_k=top_k,top_p=top_p)                        #shape(1,50304)
             tokens=torch.cat((tokens,next_token),dim=-1)
-
+    
     all_tokens=tokens.squeeze(0).tolist()
     generated_tokens=all_tokens[len(initial_tokens):]
     generated_text=enc.decode(generated_tokens)
@@ -76,9 +72,13 @@ def generate_text(prompt,max_new_tokens,temp=0.7,top_k=50,top_p=0.90):
     print("Output Generated from the model:")
     print(f"{generated_text}")
 
-prompt="The Industrial Revolution happened in"
+if __name__=="__main__":
+    prompt="The Industrial Revolution happened in"
 
-generate_text(prompt,max_new_tokens=50)
+    generate_text(prompt,max_new_tokens=50)
+
+
+
 
     
 
