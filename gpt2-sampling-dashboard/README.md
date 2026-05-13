@@ -13,13 +13,15 @@ Interactive dashboard to experiment with GPT-2 decoding strategies and observe h
 
 ---
 
+An illustation of UI and outpu generated from the model:
+
 ## Streamlit UI
 
 ![UI](ui.png)
 
 ---
 
-## Greedy / Low-Temperature Decoding (temp=0.1) and Entropy vs Diversity
+## Greedy / Low-Temperature Decoding (temp=0.1) and Entropy vs Diversity plot
 
 ![Greedy](greedy.png)
 
