@@ -1,77 +1,101 @@
 import torch
-from torch.nn import functional as F
-from train_gpt2 import GPT2, GPT2Config, device 
+import torch.nn.functional as F
+from train_gpt2 import GPT2,GPT2Config
+import tiktoken
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(f"Using device: {device}")
+device='mps' if torch.backends.mps.is_available() else 'cpu'
 
+checkpoint="gpt2_step_11500.pt"
+state_dict=torch.load(checkpoint,map_location=device)
 
-checkpoint_path = "gpt2_step_11500.pt" 
+for k in list(state_dict.keys()):
+    if k.startswith('_orig_mod.'):
+        state_dict[k[len('_orig_mod.'):]]=state_dict.pop(k)
 
-config = GPT2Config(vocab_size=50304)
-model = GPT2(config)
+model=GPT2(GPT2Config(vocab_size=50304))
+model.to(device)
 
-state_dict = torch.load(checkpoint_path, map_location=device)
-unwanted_prefix = '_orig_mod.'
-for k, v in list(state_dict.items()):
-    if k.startswith(unwanted_prefix):
-        state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
 model.load_state_dict(state_dict)
 
-model.to(device)
-model.eval() 
+prompt="The future of artificial intelligence is"
 
-def generate(prompt, max_tokens=1,top_k=None,top_p=0.9,temp=1.5):
-    import tiktoken
-    enc = tiktoken.get_encoding('gpt2')
-    tokens = enc.encode(prompt)
-    tokens = torch.tensor(tokens, dtype=torch.long, device=device).unsqueeze(0)
+enc=tiktoken.get_encoding('gpt2')
 
-    print(f"\n--- Generating from prompt: '{prompt}' ---\n")
-    prev_text = enc.decode(tokens[0].tolist())
-    for _ in range(max_tokens):
-        with torch.no_grad():
-            logits, _ = model(tokens)
-            logits = logits[:, -1, :] 
-            logits/=temp
-            if top_k is not None:
-                #v, _ = torch.topk(logits, top_k)
-                v,_=torch.sort(logits,descending=True)
-                v=v[:,:top_k]
-                logits[logits < v[:, [-1]]] = -float('Inf')
-            probs = F.softmax(logits, dim=-1)
-            if top_p is not None:
-                sorted_probs,sorted_indices=torch.sort(probs,descending=True)
-                cumm_probs=torch.cumsum(sorted_probs,dim=-1)
-                sorted_indices_to_remove=cumm_probs>top_p
-                sorted_indices_to_remove[:,1:]=sorted_indices_to_remove[:,:-1].clone()
-                sorted_indices_to_remove[:, 0] = False
-                sorted_indices_remove=sorted_indices[sorted_indices_to_remove]
-                logits[0,sorted_indices_remove]=-float('Inf')
-                probs=F.softmax(logits,dim=-1)
-            #probs,indices=torch.sort(probs,descending=True)
-            #indices=indices[0,0]
-            #for k in range(10):
-                #if indices[0,k].item()>50257:
-                    #continue
-            next_token = torch.multinomial(probs, num_samples=1)
-            #next_token=indices.unsqueeze(0).unsqueeze(0)
-            tokens = torch.cat((tokens, next_token), dim=1)
-            text=enc.decode(tokens[0].tolist())
-            #print(text)
-            print(text[len(prev_text):], end='', flush=True)
-            prev_text=text
-    print("\n\n--- End ---")
+def next_token_generator(logits,temp,top_k,top_p):
+    if temp==0:
+        next_token=logits.argmax(dim=-1,keepdim=True)
+        return next_token
+    logits=logits/temp
+    probs=F.softmax(logits,dim=-1)  #(1,50304)
 
-print("Model loaded! Type your prompt below (or type 'exit' to quit).")
+    if top_k is not None:
+        logits,topk_indices = torch.topk(logits,k=top_k)
+        probs=F.softmax(logits,dim=-1) #(1,top_k)
 
-while True:
-    user_input = input("\nPrompt: ")
+    if top_p is not None:
+        sorted_probs,sorted_indices=torch.sort(probs,descending=True) 
+        cumm_prob=torch.cumsum(sorted_probs,dim=-1)
+        sorted_indices_to_remove=cumm_prob > top_p
+        sorted_indices_to_remove[:,1:]=sorted_indices_to_remove[:,:-1].clone()
+        sorted_indices_to_remove[:,0]=False
+        sorted_probs[sorted_indices_to_remove]=0
+        sorted_probs_sum=torch.sum(sorted_probs,dim=-1)
+        probs=sorted_probs/sorted_probs_sum
     
-    if user_input.lower() in ['exit', 'quit']:
-        break
+    if top_k is None and top_p is None:
+        next_token=torch.multinomial(probs,num_samples=1)
+        return next_token
+    elif top_k is not None and top_p is None:
+        next_index=torch.multinomial(probs,num_samples=1)
+        next_token=torch.gather(topk_indices,dim=1,index=next_index)
+        return next_token
+    elif top_k is None and top_p is not None:
+        next_index=torch.multinomial(probs,num_samples=1)
+        next_token=torch.gather(sorted_indices,dim=1,index=next_index)
+        return next_token
+    else:
+        next_index_1=torch.multinomial(probs,num_samples=1)
+        next_index_2=torch.gather(sorted_indices,dim=1,index=next_index_1)
+        next_token=torch.gather(topk_indices,dim=1,index=next_index_2)
+        return next_token
+    
         
-    if user_input.strip() == "":
-        continue
 
-    generate(user_input, max_tokens=100)
+
+
+def generate_text(prompt,max_new_tokens,temp=0.7,top_k=50,top_p=0.90):
+
+    initial_tokens=enc.encode(prompt)
+    tokens=torch.tensor(initial_tokens,dtype=torch.long,device=device).unsqueeze(0) #shape (1,T)
+    
+
+    with torch.no_grad():
+        for _ in range(max_new_tokens):
+            logits,_=model(tokens)
+            logits=logits[:,-1,:]   
+            next_token=next_token_generator(logits,temp=temp,top_k=top_k,top_p=top_p)                        #shape(1,50304)
+            tokens=torch.cat((tokens,next_token),dim=-1)
+
+    all_tokens=tokens.squeeze(0).tolist()
+    generated_tokens=all_tokens[len(initial_tokens):]
+    generated_text=enc.decode(generated_tokens)
+
+
+    print("Output Generated from the model:")
+    print(f"{generated_text}")
+
+prompt="The Industrial Revolution happened in"
+
+generate_text(prompt,max_new_tokens=50)
+
+    
+
+        
+
+
+
+
+
+
+
+
