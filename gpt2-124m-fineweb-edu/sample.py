@@ -26,38 +26,30 @@ def next_token_generator(logits,temp,top_k,top_p):
         next_token=logits.argmax(dim=-1,keepdim=True)
         return next_token
     logits=logits/temp
-    probs=F.softmax(logits,dim=-1)  #(1,50304)
 
     if top_k is not None:
-        logits,topk_indices = torch.topk(logits,k=top_k)
-        probs=F.softmax(logits,dim=-1) #(1,top_k)
+        _,topk_indices = torch.topk(logits,k=top_k)
+        mask=torch.ones_like(logits,dtype=torch.bool)
+        mask[0,topk_indices[0]]=False
+        logits[mask]=-float('inf')
+
 
     if top_p is not None:
+        probs=F.softmax(logits,dim=-1)
         sorted_probs,sorted_indices=torch.sort(probs,descending=True) 
         cumm_prob=torch.cumsum(sorted_probs,dim=-1)
         sorted_indices_to_remove=cumm_prob > top_p
         sorted_indices_to_remove[:,1:]=sorted_indices_to_remove[:,:-1].clone()
         sorted_indices_to_remove[:,0]=False
-        sorted_probs[sorted_indices_to_remove]=0
-        sorted_probs_sum=torch.sum(sorted_probs,dim=-1)
-        probs=sorted_probs/sorted_probs_sum
+        gather_indices=sorted_indices[~sorted_indices_to_remove].unsqueeze(0)
+        mask=torch.ones_like(logits,dtype=torch.bool)
+        mask[0,gather_indices[0]]=False
+        logits[mask]=-float('inf')
+
+    probs=F.softmax(logits,dim=-1)
+    next_token=torch.multinomial(probs,num_samples=1)
+    return next_token
     
-    if top_k is None and top_p is None:
-        next_token=torch.multinomial(probs,num_samples=1)
-        return next_token
-    elif top_k is not None and top_p is None:
-        next_index=torch.multinomial(probs,num_samples=1)
-        next_token=torch.gather(topk_indices,dim=1,index=next_index)
-        return next_token
-    elif top_k is None and top_p is not None:
-        next_index=torch.multinomial(probs,num_samples=1)
-        next_token=torch.gather(sorted_indices,dim=1,index=next_index)
-        return next_token
-    else:
-        next_index_1=torch.multinomial(probs,num_samples=1)
-        next_index_2=torch.gather(sorted_indices,dim=1,index=next_index_1)
-        next_token=torch.gather(topk_indices,dim=1,index=next_index_2)
-        return next_token
     
         
 
