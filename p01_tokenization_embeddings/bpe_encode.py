@@ -1,7 +1,8 @@
 import pickle
-with open ("merges.pkl",'rb') as f:
-    merges=pickle.load(f)
-def encode(text):
+
+def encode(text,merges_file):
+    with open (merges_file,'rb') as f:
+        merges=pickle.load(f)
     text=list(text.encode('utf-8'))
     while True:
         i=c=0

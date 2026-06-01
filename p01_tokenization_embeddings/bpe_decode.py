@@ -1,7 +1,8 @@
 import pickle
-with open("merges.pkl",'rb') as f:
-    merges=pickle.load(f)
-def decode(text):
+
+def decode(text,merges_file):
+    with open(merges_file,'rb') as f:
+        merges=pickle.load(f)
     reverse_merges={v:k for k,v in merges.items()} 
     while any(p in reverse_merges for p in text) :
         new_text=[]
