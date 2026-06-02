@@ -17,10 +17,6 @@ For each version, I calculated:
 
 I also analyzed token counts across different domains. Since the tokenizer was trained on English text, I evaluated its performance on multilingual text, code, URLs, and other domains.
 
-Additionally, I tested how:
-
-- A small vocabulary increases sequence length.
-- A large vocabulary can under-train rare tokens.
 
 I compared the tokenization of the following text at different stages (100, 500, 1500, and 2500 merges):
 
@@ -73,6 +69,9 @@ I compared the tokenization of the following text at different stages (100, 500,
     'unknown_token_rate': 0.21818181818181817
 }
 ```
+From the above results, we can observe a clear trade-off between vocabulary size and sequence length. As the number of merges (and consequently the vocabulary size) increases, the token count decreases while the average number of bytes per token increases.
+
+The unknown token rate is defined as the proportion of token IDs below 256. Since the tokenizer begins learning merged tokens from ID 256 onward, IDs below 256 correspond to raw byte-level tokens. As more merges are performed, the tokenizer learns larger and more frequent subword units, leading to a steady decrease in the unknown token rate.
 
 I also used a Shakespeare-like text with the same number of original bytes as the previous text and observed a lower token count. This suggests that when the training corpus is more similar to the input text, fewer tokens are required.
 
@@ -130,3 +129,7 @@ The following results were recorded:
 | Chinese | 69 | 69 | 1.00× | 1.0000 |
 | Emojis | 52 | 52 | 1.00× | 1.0000 |
 | Corrupted Unicode | 74 | 42 | 1.76× | 1.7619 |
+
+From the above results, it can be clearly observed that the compression ratio is highest for English prose compared to all other domains. This is expected, since the tokenizer was trained on English text from the Tiny Shakespeare dataset.
+
+The compression ratio is lower for domains such as Python code, URL paths, mathematical notation, and social media text because their token distributions differ from those of the training corpus. The compression ratio drops to nearly 1× for Arabic, Hindi, Chinese, and emojis, indicating that the tokenizer is unable to effectively merge and compress these inputs. This occurs because such characters and patterns were largely absent from the training data, forcing the tokenizer to rely primarily on byte-level representations rather than learned subword tokens.
