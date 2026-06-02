@@ -114,74 +114,19 @@ test_domains = {
 
 The following results were recorded:
 
-### English Prose
+## Domain Testing Results
 
-- Original bytes: 97
-- Bytes after tokenization: 46
-- Bytes per token: 2.108695652173913
-
-### Python Code
-
-- Original bytes: 70
-- Bytes after tokenization: 46
-- Bytes per token: 1.5217391304347827
-
-### URL Path
-
-- Original bytes: 63
-- Bytes after tokenization: 46
-- Bytes per token: 1.3695652173913044
-
-### Mathematical Notation
-
-- Original bytes: 70
-- Bytes after tokenization: 63
-- Bytes per token: 1.1111111111111112
-
-### Social Media
-
-- Original bytes: 80
-- Bytes after tokenization: 58
-- Bytes per token: 1.3793103448275863
-
-### Technical Words
-
-- Original bytes: 94
-- Bytes after tokenization: 51
-- Bytes per token: 1.8431372549019607
-
-### JSON Data
-
-- Original bytes: 73
-- Bytes after tokenization: 49
-- Bytes per token: 1.489795918367347
-
-### Arabic
-
-- Original bytes: 95
-- Bytes after tokenization: 94
-- Bytes per token: 1.0106382978723405
-
-### Hindi
-
-- Original bytes: 146
-- Bytes after tokenization: 144
-- Bytes per token: 1.0138888888888888
-
-### Chinese
-
-- Original bytes: 69
-- Bytes after tokenization: 69
-- Bytes per token: 1.0
-
-### Emojis
-
-- Original bytes: 52
-- Bytes after tokenization: 52
-- Bytes per token: 1.0
-
-### Corrupted Unicode
-
-- Original bytes: 74
-- Bytes after tokenization: 42
-- Bytes per token: 1.7619047619047619
+| Domain | Original Bytes | Tokenized Bytes | Compression Ratio | Bytes Per Token |
+|---------|---------------:|----------------:|------------------:|----------------:|
+| English Prose | 97 | 46 | 2.11× | 2.1087 |
+| Python Code | 70 | 46 | 1.52× | 1.5217 |
+| URL Path | 63 | 46 | 1.37× | 1.3696 |
+| Mathematical Notation | 70 | 63 | 1.11× | 1.1111 |
+| Social Media | 80 | 58 | 1.38× | 1.3793 |
+| Technical Words | 94 | 51 | 1.84× | 1.8431 |
+| JSON Data | 73 | 49 | 1.49× | 1.4898 |
+| Arabic | 95 | 94 | 1.01× | 1.0106 |
+| Hindi | 146 | 144 | 1.01× | 1.0139 |
+| Chinese | 69 | 69 | 1.00× | 1.0000 |
+| Emojis | 52 | 52 | 1.00× | 1.0000 |
+| Corrupted Unicode | 74 | 42 | 1.76× | 1.7619 |
