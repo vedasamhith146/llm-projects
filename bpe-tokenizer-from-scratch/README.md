@@ -184,4 +184,4 @@ The following results were recorded:
 
 - Original bytes: 74
 - Bytes after tokenization: 42
-- Bytes per tok
+- Bytes per token: 1.7619047619047619
