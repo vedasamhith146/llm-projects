@@ -1,6 +1,6 @@
 # Project 1: Build a Tokenizer from Scratch
 
-This is the first project in my series of LLM engineering projects: **Project 1 - Build a Tokenizer from Scratch**.
+This is the first project in the series of LLM engineering projects: **Project 1 - Build a Tokenizer from Scratch**.
 
 In this project, I implemented the **Byte Pair Encoding (BPE)** algorithm and trained a tokenizer on the Tiny Shakespeare dataset. I implemented four different versions of the tokenizer:
 
