@@ -40,12 +40,12 @@ def train_tokenizer(input_file, max_merges, min_freq):
         else:
             break
         text=new_text.copy()
-    with open(f"merges_{max_merges}.pkl","wb") as f:
+    with open(f"merges_{max_merges+1}.pkl","wb") as f:
         pickle.dump(my_generated_merges,f)
     
 
 if __name__=="__main__":
     input_file="data/tiny.txt"
-    train_tokenizer(input_file=input_file,max_merges=2500,min_freq=2)
+    train_tokenizer(input_file=input_file,max_merges=100,min_freq=2)
 
         
