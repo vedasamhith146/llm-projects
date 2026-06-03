@@ -73,7 +73,7 @@ def generate_text(prompt,max_new_tokens,temp=0.7,top_k=50,top_p=0.90):
     print(f"{generated_text}")
 
 if __name__=="__main__":
-    prompt="The Industrial Revolution happened in"
+    prompt="How do you get HIV?"
 
     generate_text(prompt,max_new_tokens=50)
 
