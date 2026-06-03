@@ -65,7 +65,7 @@ Before analyzing GPT-2, we first investigate whether meaningful geometry emerges
 
 ### Result
 
-![Initial vs Final Embeddings](bigram_initial_vs_final.png)
+![Initial vs Final Embeddings](figures/bigram_initial_vs_final.png)
 
 ### Observation
 
@@ -114,7 +114,7 @@ Selected semantic concepts:
 
 PCA projection:
 
-![PCA Semantic Clusters](pca_semantic_clusters.png)
+![PCA Semantic Clusters](figures/pca_semantic_clusters.png)
 
 ### Observation
 
@@ -181,7 +181,7 @@ Do common tokens receive larger embeddings?
 
 ### Result
 
-![Frequency vs Norm](frequency_vs_embedding_norm.png)
+![Frequency vs Norm](figures/frequency_vs_embedding_norm.png)
 
 Pearson **r = -0.401**
 
@@ -230,7 +230,7 @@ Surprisal is defined as:
 
 ### Result
 
-![Surprisal vs Norm](surprisal_vs_embedding_norm.png)
+![Surprisal vs Norm](figures/surprisal_vs_embedding_norm.png)
 
 Pearson **r = +0.401**
 
@@ -284,7 +284,7 @@ Are large-norm tokens isolated?
 
 ### Result
 
-![Neighborhood Density](neighborhood_density_vs_norm.png)
+![Neighborhood Density](figures/neighborhood_density_vs_norm.png)
 
 ```text
 Pearson = 0.142
@@ -353,7 +353,7 @@ health ↔ medical
 students ↔ education
 ```
 
-![Semantic Emergence](semantic_emergence_over_time.png)
+![Semantic Emergence](figures/semantic_emergence_over_time.png)
 
 ### Observation
 
@@ -377,7 +377,7 @@ The model learns semantic similarity before training completes.
 
 Measured distance from the initial embedding at step 250.
 
-![Embedding Movement](embedding_movement_during_training.png)
+![Embedding Movement](figures/embedding_movement_during_training.png)
 
 ### Observation
 
@@ -395,7 +395,7 @@ Tracked the top-10 nearest neighbors of selected concepts.
 
 Similarity measured using Jaccard overlap.
 
-![Neighborhood Stability](neighborhood_stability.png)
+![Neighborhood Stability](figures/neighborhood_stability.png)
 
 ### Observation
 
@@ -417,7 +417,7 @@ Semantic neighborhoods form long before training finishes.
 
 Measured mean cosine similarity between embeddings at each checkpoint and the initial checkpoint.
 
-![Global Space Evolution](global_embedding_space_evolution.png)
+![Global Space Evolution](figures/global_embedding_space_evolution.png)
 
 ### Observation
 
