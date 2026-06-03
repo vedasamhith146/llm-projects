@@ -23,10 +23,10 @@ Rather than studying embeddings as static vectors, this project treats them as a
 
 Training and analysis were performed using:
 
-- **FineWeb-Edu (sample-10BT)**
-- First **60 tokenized shards** used for large-scale frequency and context analysis
-- **GPT-2 tokenizer**
-- Vocabulary size: **50,257 tokens**
+- FineWeb-Edu (sample-10BT)
+- First 60 tokenized shards used for large-scale frequency and context analysis
+- GPT-2 tokenizer
+- Vocabulary size: 50,257 tokens
 
 ---
 
@@ -65,9 +65,7 @@ Before analyzing GPT-2, we first investigate whether meaningful geometry emerges
 
 ### Result
 
-Initial embeddings:
-
-![Initial vs Final Embeddings](figures/bigram_initial_vs_final.png)
+![Initial vs Final Embeddings](final and initial plots.png)
 
 ### Observation
 
@@ -116,7 +114,7 @@ Selected semantic concepts:
 
 PCA projection:
 
-![PCA Semantic Clusters](figures/pca_semantic_clusters.png)
+![PCA Semantic Clusters](pca_gpt_2.png)
 
 ### Observation
 
@@ -149,10 +147,7 @@ For selected concepts:
 
 ### Results
 
-```text
-Pearson Correlation = 0.623
-p-value < 0.001
-```
+Pearson Correlation = **0.623**
 
 Examples:
 
@@ -186,11 +181,9 @@ Do common tokens receive larger embeddings?
 
 ### Result
 
-![Frequency vs Norm](figures/frequency_vs_embedding_norm.png)
+![Frequency vs Norm](frequency vs embedding norm.png)
 
-```text
-Pearson r = -0.401
-```
+Pearson **r = -0.401**
 
 ### Observation
 
@@ -231,17 +224,15 @@ Common tokens are often compressed into smaller regions of embedding space.
 
 Surprisal is defined as:
 
-$begin:math:display$
-\-\\log p\(token\)
-$end:math:display$
+\[
+-\log p(token)
+\]
 
 ### Result
 
-![Surprisal vs Norm](figures/surprisal_vs_embedding_norm.png)
+![Surprisal vs Norm](suprisal vs embedding.png)
 
-```text
-Pearson r = +0.401
-```
+Pearson **r = +0.401**
 
 ### Observation
 
@@ -291,17 +282,9 @@ Distinctive concepts often occupy larger regions of embedding space.
 
 Are large-norm tokens isolated?
 
-### Method
-
-For each token:
-
-1. Find nearest neighbors
-2. Compute average cosine similarity
-3. Compare density with embedding norm
-
 ### Result
 
-![Neighborhood Density](figures/neighborhood_density_vs_norm.png)
+![Neighborhood Density](neighborhood density vs embedding norm.png)
 
 ```text
 Pearson = 0.142
@@ -326,44 +309,6 @@ Vector arithmetic was analyzed using directions such as:
 medical - health
 research - science
 students - education
-```
-
-Examples:
-
-### medical − health
-
-```text
-medical
-surgical
-biomedical
-medications
-physician
-clinical
-diagnostic
-```
-
-### research − science
-
-```text
-research
-study
-researchers
-researcher
-studies
-survey
-paper
-```
-
-### students − education
-
-```text
-students
-student
-pupils
-learners
-participants
-children
-attendees
 ```
 
 ### Observation
@@ -408,7 +353,7 @@ health ↔ medical
 students ↔ education
 ```
 
-![Semantic Emergence](figures/semantic_emergence_over_time.png)
+![Semantic Emergence](semantic_emergence.png)
 
 ### Observation
 
@@ -432,7 +377,7 @@ The model learns semantic similarity before training completes.
 
 Measured distance from the initial embedding at step 250.
 
-![Embedding Movement](figures/embedding_movement_during_training.png)
+![Embedding Movement](embedding_movement.png)
 
 ### Observation
 
@@ -450,7 +395,7 @@ Tracked the top-10 nearest neighbors of selected concepts.
 
 Similarity measured using Jaccard overlap.
 
-![Neighborhood Stability](figures/neighborhood_stability.png)
+![Neighborhood Stability](neighborhood_stability.png)
 
 ### Observation
 
@@ -472,7 +417,7 @@ Semantic neighborhoods form long before training finishes.
 
 Measured mean cosine similarity between embeddings at each checkpoint and the initial checkpoint.
 
-![Global Space Evolution](figures/global_embedding_space_evolution.png)
+![Global Space Evolution](global_space_evolution.png)
 
 ### Observation
 
@@ -482,31 +427,27 @@ Although local semantic neighborhoods stabilize early, the global geometry conti
 
 This suggests a two-stage learning process:
 
-### Stage 1
-
-Rapid semantic organization
+### Stage 1 — Semantic Organization
 
 - Semantic clusters form
 - Nearest neighbors stabilize
+- Semantic directions emerge
 
-### Stage 2
+### Stage 2 — Geometric Refinement
 
-Global geometric refinement
-
-- Entire embedding space rotates and restructures
+- Entire embedding space continues evolving
+- Embeddings keep moving
 - Local semantics remain largely preserved
 
 ---
 
 # Key Findings
 
-### 1. Semantic structure emerges very early
+### Semantic structure emerges very early
 
 Most meaningful relationships appear within the first few thousand optimization steps.
 
-### 2. Context drives geometry
-
-Tokens sharing contexts become embedding neighbors.
+### Context drives geometry
 
 ```text
 Context Similarity ↔ Embedding Similarity
@@ -514,7 +455,7 @@ Context Similarity ↔ Embedding Similarity
 Pearson r = 0.623
 ```
 
-### 3. Rare tokens receive larger embeddings
+### Rare tokens receive larger embeddings
 
 ```text
 Frequency ↔ Norm
@@ -522,7 +463,7 @@ Frequency ↔ Norm
 Pearson r = -0.401
 ```
 
-### 4. Unexpected tokens receive stronger representations
+### Unexpected tokens receive stronger representations
 
 ```text
 Surprisal ↔ Norm
@@ -530,11 +471,11 @@ Surprisal ↔ Norm
 Pearson r = +0.401
 ```
 
-### 5. Semantic neighborhoods stabilize early
+### Semantic neighborhoods stabilize early
 
 Neighbor overlap quickly approaches 0.8–1.0.
 
-### 6. Global geometry keeps evolving
+### Global geometry keeps evolving
 
 Local semantics converge before the embedding space itself converges.
 
@@ -544,28 +485,18 @@ Local semantics converge before the embedding space itself converges.
 
 This project suggests that GPT-style language models learn embeddings in two distinct phases:
 
-1. **Semantic Structure Formation**
-   - Contextually similar tokens become neighbors
-   - Clusters emerge
-   - Semantic directions form
+## Phase 1: Semantic Structure Formation
 
-2. **Geometric Refinement**
-   - Embeddings continue moving
-   - Global structure evolves
-   - Local semantic organization remains stable
+- Contextually similar tokens become neighbors
+- Clusters emerge
+- Semantic directions form
+
+## Phase 2: Geometric Refinement
+
+- Embeddings continue moving
+- Global geometry evolves
+- Local semantic organization remains stable
 
 Embedding spaces are therefore not static lookup tables.
 
 They are evolving geometric representations that gradually organize language into meaningful structure during training.
-
----
-
-## Future Work
-
-Potential extensions:
-
-- Compare GPT-2 against larger GPT variants
-- Study embedding evolution layer-by-layer
-- Track attention head emergence alongside embeddings
-- Compare pretraining and instruction-tuning dynamics
-- Analyze multilingual embedding geometry
