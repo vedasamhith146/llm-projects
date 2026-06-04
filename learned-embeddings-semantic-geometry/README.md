@@ -220,31 +220,8 @@ Common tokens are often compressed into smaller regions of embedding space.
 
 ---
 
-# Experiment 5: Surprisal vs Embedding Norm
 
-Surprisal is defined as:
-
-\[
--\log p(token)
-\]
-
-### Result
-
-![Surprisal vs Norm](figures/surprisal_vs_embedding_norm.png)
-
-Pearson **r = +0.401**
-
-### Observation
-
-Unexpected tokens tend to have larger embedding norms.
-
-This is the inverse perspective of the frequency experiment.
-
-Rare tokens receive stronger representations.
-
----
-
-# Experiment 6: High-Norm Token Analysis
+# Experiment 5: High-Norm Token Analysis
 
 Top norm tokens:
 
@@ -276,71 +253,9 @@ Distinctive concepts often occupy larger regions of embedding space.
 
 ---
 
-# Experiment 7: Neighborhood Density
 
-### Question
 
-Are large-norm tokens isolated?
-
-### Result
-
-![Neighborhood Density](figures/neighborhood_density_vs_norm.png)
-
-```text
-Pearson = 0.142
-Spearman = 0.174
-```
-
-### Observation
-
-Only a weak relationship exists.
-
-Large norms do not simply correspond to isolated tokens.
-
-Embedding magnitude captures more than local density.
-
----
-
-# Experiment 8: Semantic Directions
-
-Vector arithmetic was analyzed using directions such as:
-
-```text
-medical - health
-research - science
-students - education
-```
-
-### Observation
-
-Meaningful semantic directions emerge naturally.
-
-Vector differences encode conceptual relationships rather than individual words.
-
----
-
-# Experiment 9: Comparing Semantic Directions
-
-Pairwise cosine similarity between directions:
-
-```text
-medical-health      research-science    0.0408
-medical-health      students-education  0.0459
-medical-health      data-information    0.0212
-research-science    students-education  0.0637
-research-science    data-information    0.0059
-students-education  data-information    0.1144
-```
-
-### Observation
-
-Most directions are nearly orthogonal.
-
-Different semantic relationships occupy independent dimensions.
-
----
-
-# Experiment 10: Emergence of Semantic Structure During Training
+# Experiment 6: Emergence of Semantic Structure During Training
 
 Tracked cosine similarity through training.
 
@@ -373,7 +288,7 @@ The model learns semantic similarity before training completes.
 
 ---
 
-# Experiment 11: Embedding Movement During Training
+# Experiment 7: Embedding Movement During Training
 
 Measured distance from the initial embedding at step 250.
 
@@ -389,7 +304,7 @@ Tokens keep adapting even after neighborhoods become stable.
 
 ---
 
-# Experiment 12: Neighborhood Stability
+# Experiment 8: Neighborhood Stability
 
 Tracked the top-10 nearest neighbors of selected concepts.
 
@@ -413,7 +328,7 @@ Semantic neighborhoods form long before training finishes.
 
 ---
 
-# Experiment 13: Global Embedding Space Evolution
+# Experiment 9: Global Embedding Space Evolution
 
 Measured mean cosine similarity between embeddings at each checkpoint and the initial checkpoint.
 
@@ -463,13 +378,6 @@ Frequency ↔ Norm
 Pearson r = -0.401
 ```
 
-### Unexpected tokens receive stronger representations
-
-```text
-Surprisal ↔ Norm
-
-Pearson r = +0.401
-```
 
 ### Semantic neighborhoods stabilize early
 

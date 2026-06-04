@@ -8,6 +8,8 @@ freqs = np.load("token_frequencies_60shards.npy")
 checkpoint = torch.load("gpt2_step_11500.pt", map_location="cpu")
 E = checkpoint["_orig_mod.transformer.wte.weight"]
 
+E=E[:len(freqs)]
+
 norms = torch.norm(E,dim=1).numpy()
 
 mask = freqs > 0
