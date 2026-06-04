@@ -388,23 +388,3 @@ Neighbor overlap quickly approaches 0.8–1.0.
 Local semantics converge before the embedding space itself converges.
 
 ---
-
-# Final Takeaway
-
-This project suggests that GPT-style language models learn embeddings in two distinct phases:
-
-## Phase 1: Semantic Structure Formation
-
-- Contextually similar tokens become neighbors
-- Clusters emerge
-- Semantic directions form
-
-## Phase 2: Geometric Refinement
-
-- Embeddings continue moving
-- Global geometry evolves
-- Local semantic organization remains stable
-
-Embedding spaces are therefore not static lookup tables.
-
-They are evolving geometric representations that gradually organize language into meaningful structure during training.
