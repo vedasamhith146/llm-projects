@@ -36,12 +36,7 @@ checkpoint_files = []
 for fname in os.listdir("."):
     m = re.match(r"gpt2_step_(\d+)\.pt",fname)
     if m:
-        checkpoint_files.append(
-            (
-                int(m.group(1)),
-                fname
-            )
-        )
+        checkpoint_files.append((int(m.group(1)),fname))
 
 checkpoint_files.sort()
 

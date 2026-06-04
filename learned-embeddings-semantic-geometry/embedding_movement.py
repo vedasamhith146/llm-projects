@@ -43,12 +43,7 @@ checkpoint_files = []
 for fname in os.listdir("."):
     m = re.match(r"gpt2_step_(\d+)\.pt",fname)
     if m:
-        checkpoint_files.append(
-            (
-                int(m.group(1)),
-                fname
-            )
-        )
+        checkpoint_files.append((int(m.group(1)),fname))
 
 checkpoint_files.sort()
 print(f"\nFound {len(checkpoint_files)} checkpoints")
@@ -58,22 +53,16 @@ ref_E = ref_state_dict[ "_orig_mod.transformer.wte.weight"][:50257]
 
 
 results = { tok: [] for tok in TOKENS}
-
 steps = []
 
 for step, ckpt_file in checkpoint_files:
-
     print(f"Loading {step}")
-
     checkpoint = torch.load(ckpt_file,map_location="cpu")
-
     if "model_state_dict" in checkpoint:
         state_dict = checkpoint["model_state_dict"]
     else:
      state_dict = checkpoint
-
     E = state_dict["_orig_mod.transformer.wte.weight"][:50257]
-
     steps.append(step)
 
     for tok in TOKENS:
