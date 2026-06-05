@@ -104,54 +104,54 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.c_proj(self.gelu(self.c_fc(x)))
     
+if __name__=="__main__":
+    config=learned_config()
+    model=learned_model(config)
+    model.to(device)
+    model = torch.compile(model) 
+    optimizer = torch.optim.AdamW(model.parameters(),lr=learning_rate,betas=(0.9, 0.95),weight_decay=0.1)
 
-config=learned_config()
-model=learned_model(config)
-model.to(device)
-model = torch.compile(model) 
-optimizer = torch.optim.AdamW(model.parameters(),lr=learning_rate,betas=(0.9, 0.95),weight_decay=0.1)
+    train_tokens=torch.load("train_tokens.pt")
+    val_tokens=torch.load("val_tokens.pt")
 
-train_tokens=torch.load("train_tokens.pt")
-val_tokens=torch.load("val_tokens.pt")
+    def get_batch(split):
+        data= train_tokens if split =="train" else val_tokens
+        ix=torch.randint(len(data)-config.block_size-1,(batch_size,))
+        x=torch.stack([data[i:i+config.block_size] for i in ix])
+        y=torch.stack([data[i+1:i+config.block_size+1] for i in ix])
+        return x,y   
 
-def get_batch(split):
-    data= train_tokens if split =="train" else val_tokens
-    ix=torch.randint(len(data)-config.block_size-1,(batch_size,))
-    x=torch.stack([data[i:i+config.block_size] for i in ix])
-    y=torch.stack([data[i+1:i+config.block_size+1] for i in ix])
-    return x,y   
+    @torch.no_grad()
 
-@torch.no_grad()
+    def estimate_loss(split, eval_iters=50):
+        model.eval()
+        losses = []
+        for _ in range(eval_iters):
+            x, y = get_batch(split)
+            x, y = x.to(device), y.to(device)
+            with torch.autocast(device_type=device,dtype=torch.bfloat16):
+                _, loss = model(x, y)
+            losses.append(loss.item())
+        model.train()
+        return sum(losses) / len(losses)
 
-def estimate_loss(split, eval_iters=50):
-    model.eval()
-    losses = []
-    for _ in range(eval_iters):
-        x, y = get_batch(split)
-        x, y = x.to(device), y.to(device)
+    for step in range(max_steps):
+        x,y=get_batch("train")
+        x,y=x.to(device), y.to(device)
         with torch.autocast(device_type=device,dtype=torch.bfloat16):
-            _, loss = model(x, y)
-        losses.append(loss.item())
-    model.train()
-    return sum(losses) / len(losses)
+            logits,loss=model(x,y)
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        optimizer.step()
+        if step%500==0:
+            train_loss=estimate_loss("train")
+            val_loss=estimate_loss("val")
+            print(f"step {step} | train loss {train_loss:.4f} | val loss {val_loss:.4f}")
 
-for step in range(max_steps):
-    x,y=get_batch("train")
-    x,y=x.to(device), y.to(device)
-    with torch.autocast(device_type=device,dtype=torch.bfloat16):
-        logits,loss=model(x,y)
-    optimizer.zero_grad(set_to_none=True)
-    loss.backward()
-    norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-    optimizer.step()
-    if step%500==0:
-        train_loss=estimate_loss("train")
-        val_loss=estimate_loss("val")
-        print(f"step {step} | train loss {train_loss:.4f} | val loss {val_loss:.4f}")
-
-    
-torch.save(model.state_dict(),"learned_model.pt")
-print("Saved learned_model.pt")
+        
+    torch.save(model.state_dict(),"learned_model.pt")
+    print("Saved learned_model.pt")
 
 
 

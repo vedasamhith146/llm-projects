@@ -1,0 +1,23 @@
+for learned model:
+
+step 0 | train loss 10.4209 | val loss 10.4198
+step 500 | train loss 3.3103 | val loss 3.2907
+step 1000 | train loss 2.9026 | val loss 2.8894
+step 1500 | train loss 2.6956 | val loss 2.6966
+step 2000 | train loss 2.5580 | val loss 2.5681
+step 2500 | train loss 2.4689 | val loss 2.4636
+step 3000 | train loss 2.3888 | val loss 2.3887
+step 3500 | train loss 2.3481 | val loss 2.3317
+step 4000 | train loss 2.2915 | val loss 2.2809
+step 4500 | train loss 2.2707 | val loss 2.2610
+step 5000 | train loss 2.2173 | val loss 2.2189
+step 5500 | train loss 2.2037 | val loss 2.2059
+step 6000 | train loss 2.1885 | val loss 2.1919
+step 6500 | train loss 2.1626 | val loss 2.1529
+step 7000 | train loss 2.1388 | val loss 2.1478
+step 7500 | train loss 2.1248 | val loss 2.1304
+step 8000 | train loss 2.1123 | val loss 2.1347
+step 8500 | train loss 2.1047 | val loss 2.1108
+step 9000 | train loss 2.0989 | val loss 2.0891
+step 9500 | train loss 2.0729 | val loss 2.0779
+
