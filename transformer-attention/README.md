@@ -493,6 +493,7 @@ which becomes:
 after softmax.
 
 This prevents the model from looking into the future.
+![Attention Heatmap](attention_map.png)
 
 ---
 
