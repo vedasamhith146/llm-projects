@@ -5,12 +5,12 @@ from one_head_model import RoPE_config,one_head_model
 
 device="cuda" if torch.cuda.is_available() else "cpu"
 
-one_head_model=one_head_model(RoPE_config(n_head=1)).to(device)
-two_head_model=one_head_model(RoPE_config(n_head=2)).to(device)
-four_head_model=one_head_model(RoPE_config(n_head=4)).to(device)
-eight_head_model=one_head_model(RoPE_config(n_head=8)).to(device)
-sixteen_head_model=one_head_model(RoPE_config(n_head=16)).to(device)
-thirtytwo_head_model=one_head_model(RoPE_config(n_head=32)).to(device)
+one_head=one_head_model(RoPE_config(n_head=1)).to(device)
+two_head=one_head_model(RoPE_config(n_head=2)).to(device)
+four_head=one_head_model(RoPE_config(n_head=4)).to(device)
+eight_head=one_head_model(RoPE_config(n_head=8)).to(device)
+sixteen_head=one_head_model(RoPE_config(n_head=16)).to(device)
+thirtytwo_head=one_head_model(RoPE_config(n_head=32)).to(device)
 
 batch_size=16
 
@@ -64,19 +64,19 @@ for k in list(thirtytwo_head_model_dict.keys()):
     if k.startswith('_orig_mod.'):
           thirtytwo_head_model_dict[k[len('_orig_mod.'):]]=thirtytwo_head_model_dict.pop(k)
 
-one_head_model.load_state_dict(one_head_model_dict)
-two_head_model.load_state_dict(two_head_model_dict)
-four_head_model.load_state_dict(four_head_model_dict)
-eight_head_model.load_state_dict(eight_head_model_dict)
-sixteen_head_model.load_state_dict(sixteen_head_model_dict)
-thirtytwo_head_model.load_state_dict(thirtytwo_head_model_dict)
+one_head.load_state_dict(one_head_model_dict)
+two_head.load_state_dict(two_head_model_dict)
+four_head.load_state_dict(four_head_model_dict)
+eight_head.load_state_dict(eight_head_model_dict)
+sixteen_head.load_state_dict(sixteen_head_model_dict)
+thirtytwo_head.load_state_dict(thirtytwo_head_model_dict)
 
-losses=[estimate_perplexity('val',one_head_model,128),estimate_perplexity('val',two_head_model,128),estimate_perplexity('val',four_head_model,128),estimate_perplexity('val',eight_head_model,128),estimate_perplexity('val',sixteen_head_model,128),estimate_perplexity('val',thirtytwo_head_model,128)]
+losses=[estimate_perplexity('val',one_head,128),estimate_perplexity('val',two_head,128),estimate_perplexity('val',four_head,128),estimate_perplexity('val',eight_head,128),estimate_perplexity('val',sixteen_head,128),estimate_perplexity('val',thirtytwo_head,128)]
 
 heads=[1,2,4,8,16,32]
 
 plt.figure(figsize=(8,5))
-plt.plot(heads,losses,markers='o')
+plt.plot(heads,losses,marker='o')
 plt.xlabel("Number of heads")
 plt.ylabel("Validation perplexity")
 plt.title("Perplexity vs Number of attention heads")
@@ -112,8 +112,3 @@ plt.ylabel("Validation Perplexity")
 plt.title("Perplexity of TinyStories Models")
 plt.grid(True)
 plt.savefig("Perplexity_of_Tinystories_Models")
-
-
-
-
-

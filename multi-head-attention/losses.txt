@@ -1,0 +1,90 @@
+step 0 | train loss 10.4894 | val loss 10.4867
+step 500 | train loss 3.2045 | val loss 3.1981
+step 1000 | train loss 2.8324 | val loss 2.8419
+step 1500 | train loss 2.6505 | val loss 2.6480
+step 2000 | train loss 2.5306 | val loss 2.5339
+step 2500 | train loss 2.4262 | val loss 2.4390
+step 3000 | train loss 2.3598 | val loss 2.3714
+step 3500 | train loss 2.3191 | val loss 2.3387
+step 4000 | train loss 2.2971 | val loss 2.2934
+step 4500 | train loss 2.2656 | val loss 2.2587
+step 5000 | train loss 2.2294 | val loss 2.2190
+step 5500 | train loss 2.2067 | val loss 2.1986
+step 6000 | train loss 2.1937 | val loss 2.1850
+step 6500 | train loss 2.1610 | val loss 2.1652
+step 7000 | train loss 2.1395 | val loss 2.1369
+step 7500 | train loss 2.1413 | val loss 2.1450
+step 8000 | train loss 2.1327 | val loss 2.1217
+step 8500 | train loss 2.1170 | val loss 2.1070
+step 9000 | train loss 2.1053 | val loss 2.1093
+step 9500 | train loss 2.0749 | val loss 2.0915
+Saved one_head_model.pt
+
+step 0 | train loss 10.4896 | val loss 10.4868
+step 500 | train loss 3.1852 | val loss 3.1787
+step 1000 | train loss 2.8023 | val loss 2.8127
+step 1500 | train loss 2.6195 | val loss 2.6156
+step 2000 | train loss 2.4975 | val loss 2.5007
+step 2500 | train loss 2.3999 | val loss 2.4118
+step 3000 | train loss 2.3351 | val loss 2.3476
+step 3500 | train loss 2.2934 | val loss 2.3145
+step 4000 | train loss 2.2739 | val loss 2.2704
+step 4500 | train loss 2.2379 | val loss 2.2314
+step 5000 | train loss 2.2068 | val loss 2.1924
+step 5500 | train loss 2.1835 | val loss 2.1739
+step 6000 | train loss 2.1701 | val loss 2.1600
+step 6500 | train loss 2.1361 | val loss 2.1396
+step 7000 | train loss 2.1167 | val loss 2.1125
+step 7500 | train loss 2.1158 | val loss 2.1193
+step 8000 | train loss 2.1068 | val loss 2.0963
+step 8500 | train loss 2.0931 | val loss 2.0816
+step 9000 | train loss 2.0847 | val loss 2.0887
+step 9500 | train loss 2.0527 | val loss 2.0681
+Saved two_head_model.pt
+
+step 0 | train loss 10.4897 | val loss 10.4870
+step 500 | train loss 3.1757 | val loss 3.1694
+step 1000 | train loss 2.7959 | val loss 2.8056
+step 1500 | train loss 2.6132 | val loss 2.6089
+step 2000 | train loss 2.4901 | val loss 2.4946
+step 2500 | train loss 2.3912 | val loss 2.4062
+step 3000 | train loss 2.3290 | val loss 2.3406
+step 3500 | train loss 2.2860 | val loss 2.3074
+step 4000 | train loss 2.2609 | val loss 2.2581
+step 4500 | train loss 2.2279 | val loss 2.2214
+step 5000 | train loss 2.1930 | val loss 2.1794
+step 5500 | train loss 2.1686 | val loss 2.1599
+step 6000 | train loss 2.1559 | val loss 2.1479
+step 6500 | train loss 2.1279 | val loss 2.1319
+step 7000 | train loss 2.1035 | val loss 2.1007
+step 7500 | train loss 2.1018 | val loss 2.1065
+step 8000 | train loss 2.0938 | val loss 2.0843
+step 8500 | train loss 2.0803 | val loss 2.0678
+step 9000 | train loss 2.0674 | val loss 2.0716
+step 9500 | train loss 2.0379 | val loss 2.0521
+Saved four_head_model.pt
+
+
+step 0 | train loss 10.4891 | val loss 10.4863
+step 500 | train loss 3.1947 | val loss 3.1875
+step 1000 | train loss 2.8046 | val loss 2.8143
+step 1500 | train loss 2.6191 | val loss 2.6158
+step 2000 | train loss 2.4881 | val loss 2.4933
+step 2500 | train loss 2.3846 | val loss 2.4004
+step 3000 | train loss 2.3220 | val loss 2.3343
+step 3500 | train loss 2.2774 | val loss 2.2981
+step 4000 | train loss 2.2500 | val loss 2.2482
+step 4500 | train loss 2.2145 | val loss 2.2100
+step 5000 | train loss 2.1792 | val loss 2.1667
+step 5500 | train loss 2.1558 | val loss 2.1468
+step 6000 | train loss 2.1422 | val loss 2.1322
+step 6500 | train loss 2.1113 | val loss 2.1160
+step 7000 | train loss 2.0889 | val loss 2.0861
+step 7500 | train loss 2.0841 | val loss 2.0877
+step 8000 | train loss 2.0761 | val loss 2.0663
+step 8500 | train loss 2.0649 | val loss 2.0528
+step 9000 | train loss 2.0493 | val loss 2.0513
+step 9500 | train loss 2.0204 | val loss 2.0365
+Saved sixteen_head_model.pt
+
+
