@@ -285,17 +285,23 @@ The simplest experiment to check whether heads are learning different patterns i
 
 Before plotting all 12 heads, let's look at a single head in an enlarged view:
 
-**One-head attention map:** `Image_1 (one_head_heatmap.png)`
+## One-Head Attention Map
+
+![One-Head Attention Map](one_head_heatmap.png)
 
 I used the text `"The cat sat on the mat because the cat was tired"`, tokenized it, and passed it through my trained model. The text is short so it's easier to observe patterns.
 
 I started with the first layer and plotted the attention heatmaps of all 12 heads side by side:
 
-**First layer attention heatmaps:** `Image_2 (attention_heatmaps_heads.png)`
+## First Layer Attention Heatmaps
+
+![First Layer Attention Heatmaps](attention_heatmaps_heads.png)
 
 The heads were different, but the differences weren't very pronounced. So I plotted the attention heatmaps for the second layer:
 
-**Second layer attention heatmaps:** `Image_3 (attention_heatmaps_layer_1.png)`
+## Second Layer Attention Heatmaps
+
+![Second Layer Attention Heatmaps](attention_heatmaps_layer_1.png)
 
 In the second layer the differences are much more visible. I think it's because as we go deeper, the heads get more specialised — they may not be that specialised in the early layers. (Might be!)
 
@@ -311,13 +317,17 @@ As previously observed, the difference in heatmaps between heads in layer 1 wasn
 
 I calculated the entropy of each head across all layers (12 × 12 = 144 values). In layer 5 (0-indexed), head 3 had an entropy of **0.0768**, which immediately drew my attention. I plotted the heatmap for that particular head:
 
-**Attention heatmap of layer 5, head 3:** `Image_4 (attention_heatmap_layer5_head3.png)`
+## Attention Heatmap of Layer 5, Head 3
+
+![Attention Heatmap of Layer 5, Head 3](attention_heatmap_layer5_head3.png)
 
 This is actually crazy — in this head's attention matrix, each token attends to *itself* very strongly. This is something clearly different. (The satisfaction of discovering something like this is real 😅)
 
 For a better intuition, I also plotted the attention heatmap of another head in layer 5 with higher entropy — head 5:
 
-**Attention heatmap of layer 5, head 5:** `Image_5 (attention_heatmap_layer5_head5.png)`
+## Attention Heatmap of Layer 5, Head 5
+
+![Attention Heatmap of Layer 5, Head 5](attention_heatmap_layer5_head5.png)
 
 The difference is clearly visible!
 
@@ -327,15 +337,21 @@ The difference is clearly visible!
 
 Since layer 5 seemed interesting, I computed the pairwise similarity between all heads in that layer:
 
-**Similarity heatmap of layer 5 heads:** `Image_6 (similarity_layer_5.png)`
+## Similarity Heatmap of Layer 5 Heads
+
+![Similarity Heatmap of Layer 5 Heads](similarity_layer_5.png)
 
 If similarity is close to 1, those two heads are extracting the same patterns — which is undesirable since multi-head attention is meant to extract *different* patterns. The similarity heatmap shows that most heads are not very similar to each other, confirming they are extracting different patterns.
 
 There were two heads with notably high similarity (0.883). I plotted their attention heatmaps:
 
-**Heatmap of layer 5, head 5:** `Image_7 (attention_heatmap_layer5_head5.png)`
+## Heatmap of Layer 5, Head 5
 
-**Heatmap of layer 5, head 8:** `Image_8 (attention_heatmap_layer5_head8.png)`
+![Heatmap of Layer 5, Head 5](attention_heatmap_layer5_head5.png)
+
+## Heatmap of Layer 5, Head 8
+
+![Heatmap of Layer 5, Head 8](attention_heatmap_layer5_head8.png)
 
 They are not identical, but you can see similar patterns — head 5 is slightly brighter than head 8's attention map, but the overall pattern is similar, which explains their high similarity score.
 
@@ -364,13 +380,21 @@ That is a significant jump.
 
 Next, I wanted to see whether a model trained with more heads performs better. I trained 6 different models, each with approximately 17M parameters, with 1, 2, 4, 8, 16, and 32 attention heads, on the TinyStories dataset. The perplexity decreased up until `num_heads=16` — the optimal point. Increasing the number of heads beyond this only increases the loss, because each head gets very few dimensions to work with.
 
-**Scatter plot — Perplexity vs. Number of heads:** `Image_9 (Perplexity_of_Tinystories_Models.png)`
+## Scatter Plot: Perplexity vs. Number of Heads
 
-**Perplexity vs. Head dimension:** `Image_10 (Perplexity_vs_head_dimension.png)`
+![Perplexity vs Number of Heads](Perplexity_of_Tinystories_Models.png)
 
-**Perplexity vs. Log of attention heads:** `Image_11 (Perplexity_vs_Log_of_attention_heads.png)`
+## Perplexity vs. Head Dimension
 
-**Perplexity vs. Number of attention heads (linear):** `Image_12 (Perplexity_vs_Number_of_attention_heads.png)`
+![Perplexity vs Head Dimension](Perplexity_vs_head_dimension.png)
+
+## Perplexity vs. Log of Attention Heads
+
+![Perplexity vs Log of Attention Heads](Perplexity_vs_Log_of_attention_heads.png)
+
+## Perplexity vs. Number of Attention Heads (Linear Scale)
+
+![Perplexity vs Number of Attention Heads](Perplexity_vs_Number_of_attention_heads.png)
 
 ---
 
