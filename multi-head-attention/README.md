@@ -277,7 +277,7 @@ tensor([[[1.00, 0.00, 0.00, 0.00, 1.00, 0.00, 0.00, 0.00],
 
 ## Experiments on GPT-2 (124M)
 
-In this project, I investigated whether heads are really learning different patterns, which heads are important, and what happens to the loss when we ablate a head. I used an already-trained GPT-2 (124M) model that I fine-tuned on the FineWeb-Edu dataset (12 layers, 12 heads) to study the heads.
+In this project, I investigated whether heads are really learning different patterns, which heads are important, and what happens to the loss when we ablate a head. I used an trained GPT-2 (124M) model that I trained on the FineWeb-Edu dataset (12 layers, 12 heads) to study the heads.
 
 ### Attention Heatmaps
 
