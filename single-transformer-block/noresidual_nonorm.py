@@ -107,8 +107,8 @@ class Block(nn.Module):
     def forward(self,x):
         #x=x+self.attn(self.rmsnorm_1(x))
         #x=x+self.mlp(self.rmsnorm_2(x))
-        x=self.attn(x)
-        x=self.mlp(x)
+        x=x+self.attn(x)
+        x=x+self.mlp(x)
         return x
     
 class RMSNorm(nn.Module):
