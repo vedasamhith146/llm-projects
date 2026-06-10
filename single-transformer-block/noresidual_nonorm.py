@@ -105,10 +105,10 @@ class Block(nn.Module):
         self.mlp=SwiGLU_MLP(config)
 
     def forward(self,x):
-        #x=x+self.attn(self.rmsnorm_1(x))
-        #x=x+self.mlp(self.rmsnorm_2(x))
-        x=self.attn(self.rmsnorm_1(x))
-        x=self.mlp(self.rmsnorm_2(x))
+        x=x+self.attn(self.rmsnorm_1(x))
+        x=x+self.mlp(self.rmsnorm_2(x))
+        #x=self.attn(self.rmsnorm_1(x))
+        #x=self.mlp(self.rmsnorm_2(x))
         return x
     
 class RMSNorm(nn.Module):
