@@ -166,9 +166,7 @@ if __name__=="__main__":
     config=Config()
     model=mini_former(config)
     model.to(device)
-    for name,param in model.named_parameters():
-        print(name.split('.'),param.shape)
-    sys.exit()
+    model=torch.compile(model)
     optimizer=torch.optim.AdamW(model.parameters(),lr=learning_rate,betas=(0.9,0.95),weight_decay=0.1)
     train_tokens=torch.load("train_tokens.pt")
     val_tokens=torch.load("val_tokens.pt")
@@ -186,8 +184,8 @@ if __name__=="__main__":
         for _ in range(eval_iters):
             x, y = get_batch(split)
             x, y = x.to(device), y.to(device)
-            with torch.autocast(device_type=device,dtype=torch.bfloat16):
-                _, loss = model(x, y)
+            #with torch.autocast(device_type=device,dtype=torch.bfloat16):
+            _, loss = model(x, y)
             losses.append(loss.item())
         model.train()
         return sum(losses) / len(losses)
@@ -220,15 +218,18 @@ if __name__=="__main__":
             layer_grad_squares={}
             for name,param in model.named_parameters():
                 split_name=name.split('.')
-                if len(split_name)>=3 and split_name[1]=="h":
-                    layer_name=f"h.{split_name[2]}"
+                if len(split_name)>=4 and split_name[2]=="h":
+                    layer_name=f"h.{split_name[3]}"
                     if layer_name not in layer_grad_squares:
                         layer_grad_squares[layer_name]=0.0
                     layer_grad_squares[layer_name]+=(torch.sum(param.grad**2)).item()
             per_layer_gradient={}
             for layer_name,grad_square_norm in layer_grad_squares.items():
                 per_layer_gradient[layer_name]=math.sqrt(grad_square_norm)
-            per_layer_gradient_norm.append(per_layer_gradient)    
+            per_layer_gradient_norm.append(per_layer_gradient)   
+            for name, param in model.named_parameters():
+                if 'wte' in name:
+                    print(f"{name} | weight norm: {param.data.norm().item():.4f} | grad norm: {param.grad.norm().item():.4f}") 
             print(f"step {step} | train loss {train_loss:.4f} | gradient_norm {total_grad_norm:.4f}")
 
     torch.save(losses,"losses.pt")
