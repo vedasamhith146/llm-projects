@@ -55,7 +55,7 @@ class mini_former(nn.Module):
         self.miniformer=nn.ModuleDict(dict(
             wte=nn.Embedding(config.vocab_size,config.n_embd),
             h=nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
-            #rmsnorm_f=RMSNorm(config)
+            rmsnorm_f=RMSNorm(config)
         ))
         self.lm_head=nn.Linear(config.n_embd,config.vocab_size,bias=False)
         self.lm_head.weight=self.miniformer.wte.weight
@@ -88,7 +88,7 @@ class mini_former(nn.Module):
             self.per_layer_activations_std[f"h.{i}"]=math.sqrt(torch.var(x).item())
             self.per_layer_max[f"h.{i}"]=torch.max((torch.abs(x))).item()
             i+=1
-        #x=self.miniformer.rmsnorm_f(x)
+        x=self.miniformer.rmsnorm_f(x)
         logits=self.lm_head(x)
         loss=None
         if targets is not None:
@@ -99,16 +99,16 @@ class mini_former(nn.Module):
 class Block(nn.Module):
     def __init__(self,config):
         super().__init__()
-        #self.rmsnorm_1=RMSNorm(config)
+        self.rmsnorm_1=RMSNorm(config)
         self.attn=CausalSelfAttention(config)
-        #self.rmsnorm_2=RMSNorm(config)
+        self.rmsnorm_2=RMSNorm(config)
         self.mlp=SwiGLU_MLP(config)
 
     def forward(self,x):
         #x=x+self.attn(self.rmsnorm_1(x))
         #x=x+self.mlp(self.rmsnorm_2(x))
-        x=x+self.attn(x)
-        x=x+self.mlp(x)
+        x=self.attn(self.rmsnorm_1(x))
+        x=self.mlp(self.rmsnorm_2(x))
         return x
     
 class RMSNorm(nn.Module):
