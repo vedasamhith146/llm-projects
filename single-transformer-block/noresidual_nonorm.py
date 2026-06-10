@@ -9,7 +9,7 @@ import sys
 device='cuda' if torch.cuda.is_available() else 'cpu'
 torch.manual_seed(42)
 
-batch_size=16
+batch_size=4
 learning_rate=3e-4
 max_steps=200
 
@@ -202,20 +202,21 @@ if __name__=="__main__":
     for step in range(max_steps):
         x,y=get_batch("train")
         x,y=x.to(device), y.to(device)
-        with torch.autocast(device_type=device,dtype=torch.bfloat16):
-            logits,loss=model(x,y)
+        #with torch.autocast(device_type=device,dtype=torch.bfloat16):
+        logits,loss=model(x,y)
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
+        optimizer.step()
         if step%10==0:
             train_loss=estimate_loss("train")
             params_grad_norm=[(torch.sum(param.grad**2)).item() for param in list(model.parameters())]
             total_grad_norm=math.sqrt(sum(params_grad_norm))
             losses.append(train_loss)
             gradient_norm.append(total_grad_norm)
-            per_layer_activation_norm.append(model.per_layer_activations)
-            per_layer_activation_mean.append(model.per_layer_activations_mean)
-            per_layer_activation_std.append(model.per_layer_activations_std)
-            per_layer_max_value.append(model.per_layer_max)
+            per_layer_activation_norm.append(model.per_layer_activations.copy())
+            per_layer_activation_mean.append(model.per_layer_activations_mean.copy())
+            per_layer_activation_std.append(model.per_layer_activations_std.copy())
+            per_layer_max_value.append(model.per_layer_max.copy())
             layer_grad_squares={}
             for name,param in model.named_parameters():
                 split_name=name.split('.')
