@@ -146,8 +146,6 @@ if __name__=="__main__":
         y=torch.stack([data[i+1:i+config.block_size+1] for i in ix])
         return x,y   
 
-    @torch.no_grad()
-
     def estimate_loss(split, eval_iters=50):
         model.eval()
         losses = []

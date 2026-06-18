@@ -78,9 +78,8 @@ def generate_text(prompt,max_new_tokens,temp,top_k,top_p):
     return generated_text,entropy,diversity
 
 if __name__=="__main__":
-    prompt="The Industrial Revolution happened in"
-
-    return_text,entropy,diversity=generate_text(prompt,max_new_tokens=20,temp=1.2,top_k=50,top_p=50)
+    prompt="Once upon a time"
+    return_text,entropy,diversity=generate_text(prompt,max_new_tokens=500,temp=0.8,top_k=50,top_p=0.95)
     print(f"Return text : {return_text}")
     print(f"Entropy: {entropy}")
     print(f"diversity:{diversity}")

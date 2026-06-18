@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 
 total_batch_size = 524288 
-B = 64              
+B = 64            
 T = 1024                  
 grad_accum_steps = total_batch_size // (B * T)
 max_steps = 19073       
