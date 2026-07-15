@@ -131,3 +131,6 @@ Exact duplicate rate: 2.71% (removed via SHA-256 deduplication)
 Near-duplicate rate: 0.94% (removed via MinHash with jaccard threeshold 0.80)
 Total deduplication: 3.65%
 
+## Conclusion
+
+This is not the exact step-by-step preprocessing pipeline followed by companies building modern LLMs,different companies have their own proprietary pipelines. However, this provides a rough overview of what data preprocessing looks like, intended to give you a general sense of: 'This is how data preprocessing works.'
