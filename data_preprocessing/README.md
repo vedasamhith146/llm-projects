@@ -1,4 +1,3 @@
-
 ## Building a Pre-training Data Pipeline
 
 Data quality is one of the highest-impact parts of the stack.
