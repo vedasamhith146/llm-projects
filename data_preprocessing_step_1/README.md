@@ -8,7 +8,7 @@ CommonCrawl is a crawler that has been crawling the web since 2008. It is a mass
 
 ## Document Ingestion
 
-Now, if we consider a particular crawl — for example CC-MAIN-2026-25, which was the latest crawl at the time of doing this project (meaning it was the 25th crawl of 2025) — we download the `warc.paths.gz` file from their website. It contains the paths to 100,000 files (these are not the websites themselves). Each WARC file contains roughly 20k-30k records (rough number), which are the actual websites.
+Now, if we consider a particular crawl — for example CC-MAIN-2026-25, which was the latest crawl at the time of doing this project (meaning it was the 25th crawl of 2026) — we download the `warc.paths.gz` file from their website. It contains the paths to 100,000 files (these are not the websites themselves). Each WARC file contains roughly 20k-30k records (rough number), which are the actual websites.
 
 Document ingestion basically means that from raw WARC files we need to prepare something like this for each record:
 
