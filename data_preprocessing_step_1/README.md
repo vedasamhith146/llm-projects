@@ -124,3 +124,10 @@ PII detection means checking whether a document contains personal information su
 This should ideally have been done earlier, while removing other languages, but I do it now: I keep documents where the English confidence is ≥ 0.80 and discard the rest. 0.80 is generally used as an industry standard.
 
 ![Data filtering pipeline](data_filtering_pipeline_bar_chart.png)
+
+## Duplicate rate measure
+
+Exact duplicate rate: 2.71% (removed via SHA-256 deduplication)
+Near-duplicate rate: 0.94% (removed via MinHash with jaccard threeshold 0.80)
+Total deduplication: 3.65%
+
