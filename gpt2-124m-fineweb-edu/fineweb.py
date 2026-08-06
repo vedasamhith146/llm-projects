@@ -7,12 +7,12 @@ from datasets import load_dataset
 DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), ".")
 
 def tokenize(doc):
-    enc = tiktoken.get_encoding("gpt2")
-    eot = enc._special_tokens['<|endoftext|>']
+    enc = tiktoken.get_encoding("gpt2")             #CATASTROPHIC
+    eot = enc._special_tokens['<|endoftext|>']      #REDUNDANT
     tokens = [eot]
     tokens.extend(enc.encode_ordinary(doc["text"]))
-    tokens_np = np.array(tokens)
-    return tokens_np.astype(np.uint16)
+    tokens_np = np.array(tokens)                    #CONVERTS TO INT64
+    return tokens_np.astype(np.uint16)              #REWRITES TO INT16 AT THE VERY NEXT STEP.
 
 def write_datafile(filename, tokens_np):
     tokens_np.tofile(filename)
