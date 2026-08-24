@@ -46,7 +46,7 @@ def next_token_generator(logits,temp=1,top_k=None,top_p=None):
     return next_token,probs
 
 
-def generate_tokens(num_tokens):
+def generate_tokens_target(num_tokens):
 
     #Converting prompt into mlx core array to process
     input_ids=tokenizer.apply_chat_template(messages,tokenize=True,add_generation_prompt=True,return_tensors="np")

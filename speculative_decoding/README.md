@@ -12,7 +12,7 @@ This was a very interesting algorithm to implement because there are several edg
 
 ---
 
-# Model Selection
+## Model Selection
 
 For this implementation, I selected:
 
@@ -29,10 +29,10 @@ The paper mentions:
 
 They also mention that the cost coefficient:
 
-\[
+$$
 c = \frac{\text{time taken for one run of draft model }(M_q)}
 {\text{time taken for one run of target model }(M_p)}
-\]
+$$
 
 was always less than **0.05** in their experiments.
 
@@ -53,9 +53,9 @@ Even if no speedup is observed, this experiment will help understand **where spe
 
 The first step is calculating:
 
-\[
+$$
 c = \frac{T_q}{T_p}
-\]
+$$
 
 where:
 
@@ -69,15 +69,15 @@ For my setup:
 
 Obtained:
 
-\[
+$$
 \boxed{c = 0.3328}
-\]
+$$
 
 This is much higher compared to the paper's experiments where:
 
-\[
+$$
 c < 0.05
-\]
+$$
 
 Therefore, the draft model is relatively expensive compared to the target model.
 
@@ -87,23 +87,23 @@ Therefore, the draft model is relatively expensive compared to the target model.
 
 The next important quantity is:
 
-\[
+$$
 \alpha
-\]
+$$
 
 According to Corollary 3.9 from the paper:
 
 If:
 
-\[
+$$
 \alpha > c
-\]
+$$
 
 then there exists some value of:
 
-\[
+$$
 \gamma
-\]
+$$
 
 for which speculative decoding provides speedup.
 
@@ -113,15 +113,15 @@ for which speculative decoding provides speedup.
 
 Instead of directly sampling:
 
-\[
+$$
 x \sim p(x)
-\]
+$$
 
 we first sample:
 
-\[
+$$
 x \sim q(x)
-\]
+$$
 
 where:
 
@@ -130,29 +130,29 @@ where:
 
 The sampled token is accepted if:
 
-\[
+$$
 q(x) \leq p(x)
-\]
+$$
 
 Otherwise, it is rejected with probability:
 
-\[
+$$
 1-\frac{p(x)}{q(x)}
-\]
+$$
 
 and resampled from:
 
-\[
+$$
 p'(x)=
 \frac{\max(0,p(x)-q(x))}
 {\sum_x \max(0,p(x)-q(x))}
-\]
+$$
 
 The paper proves that this process still produces:
 
-\[
+$$
 x \sim p(x)
-\]
+$$
 
 Refer to Appendix A.1 of the paper for the proof.
 
@@ -162,9 +162,9 @@ Refer to Appendix A.1 of the paper for the proof.
 
 The value:
 
-\[
+$$
 \alpha = E(\beta)
-\]
+$$
 
 where:
 
@@ -174,15 +174,15 @@ For a given prefix, β represents the probability that a randomly sampled draft 
 
 Mathematically:
 
-\[
+$$
 \beta = \sum_x \min(p(x),q(x))
-\]
+$$
 
 Therefore:
 
-\[
+$$
 \alpha = E(\sum_x \min(p(x),q(x)))
-\]
+$$
 
 α measures how closely the draft model approximates the target model.
 
@@ -216,9 +216,9 @@ For each:
 
 Obtained:
 
-\[
+$$
 \boxed{\alpha = 0.6184}
-\]
+$$
 
 ---
 
@@ -226,21 +226,21 @@ Obtained:
 
 We have:
 
-\[
+$$
 \alpha = 0.6184
-\]
+$$
 
 and:
 
-\[
+$$
 c = 0.3328
-\]
+$$
 
 Therefore:
 
-\[
+$$
 \alpha > c
-\]
+$$
 
 Hence according to Corollary 3.9:
 
@@ -252,27 +252,27 @@ There exists a value of γ where speculative decoding should provide improvement
 
 The theoretical speedup formula from the paper:
 
-\[
+$$
 Speedup =
 \frac{1-\alpha^{\gamma+1}}
 {(1-\alpha)(\gamma c+1)}
-\]
+$$
 
 Testing different γ values:
 
 ## γ = 1
 
-\[
+$$
 Speedup =
 \frac{1-(0.6184)^2}
 {(1-0.6184)(1(0.3328)+1)}
-\]
+$$
 
 Result:
 
-\[
+$$
 \boxed{1.214x}
-\]
+$$
 
 Expected:
 
@@ -282,25 +282,25 @@ Expected:
 
 ## γ = 2
 
-\[
+$$
 \boxed{1.201x}
-\]
+$$
 
 ---
 
 ## γ = 3
 
-\[
+$$
 \boxed{1.119x}
-\]
+$$
 
 ---
 
 ## γ = 4
 
-\[
+$$
 \boxed{1.022x}
-\]
+$$
 
 Almost no improvement.
 
@@ -308,9 +308,9 @@ Almost no improvement.
 
 ## γ = 5
 
-\[
+$$
 \boxed{0.928x}
-\]
+$$
 
 Slower than target model alone.
 
@@ -326,9 +326,9 @@ Next step is validating experimentally.
 
 For:
 
-\[
+$$
 \gamma = 1
-\]
+$$
 
 I selected the following prompt:
 
@@ -350,13 +350,13 @@ Results:
 
 Measured speedup:
 
-\[
+$$
 \frac{1.8380}{1.9131}
-\]
+$$
 
-\[
+$$
 \boxed{0.9607x}
-\]
+$$
 
 Therefore speculative decoding was actually slower.
 
@@ -366,30 +366,30 @@ Therefore speculative decoding was actually slower.
 
 For this prompt:
 
-\[
+$$
 \alpha = 0.5836
-\]
+$$
 
 Using this value:
 
-\[
+$$
 Speedup_{theoretical}
 =
 \frac{1-(0.5836)^2}
 {(1-0.5836)(1(0.3328)+1)}
-\]
+$$
 
 Result:
 
-\[
+$$
 \boxed{1.188x}
-\]
+$$
 
 However, experimental speedup was:
 
-\[
+$$
 0.9607x
-\]
+$$
 
 The difference occurs because the theoretical equation does not include:
 
@@ -412,9 +412,9 @@ Next, I measured α for different prompt categories.
 
 Obtained:
 
-\[
+$$
 \boxed{\alpha = 0.4146}
-\]
+$$
 
 For:
 
@@ -423,9 +423,9 @@ For:
 
 I also obtained α values around:
 
-\[
+$$
 0.40
-\]
+$$
 
 ---
 
@@ -433,9 +433,9 @@ I also obtained α values around:
 
 Previously:
 
-\[
+$$
 \alpha = 0.6184
-\]
+$$
 
 was obtained when measuring across:
 
@@ -445,9 +445,9 @@ was obtained when measuring across:
 
 However, during individual experiments:
 
-\[
+$$
 \alpha \approx 0.40
-\]
+$$
 
 was observed.
 
@@ -468,5 +468,3 @@ Possible reasons being investigated:
 - Measurement methodology differences
 
 Further analysis is required to understand where the discrepancy originates.
-
----
