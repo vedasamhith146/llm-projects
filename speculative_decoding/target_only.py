@@ -9,10 +9,9 @@ print("loading model...")
 
 target_model,tokenizer=load(target_model_path)
 
-
 messages=[
     {"role":"system","content":"You are a helpful and concise assistant."},
-    {"role":"user","content":"What is the capital of France?"}
+    {"role":"user","content":"Write a detailed science-fiction story about a spacecraft that lands on a mysterious planet after losing communication with Earth. Describe the alien landscape, the spacecraft interior, the sounds and atmosphere around the crew, and the discovery that something unexpected is moving beneath the surface. Build the story gradually and end with a surprising discovery."}
 ]
 
 def next_token_generator(logits,temp=1,top_k=None,top_p=None):
@@ -56,29 +55,37 @@ def generate_tokens_target(num_tokens):
     #Cache to store the keys,value of the prompt
     target_cache=make_prompt_cache(target_model)
 
-    #initial prefill for draft and target models
-    target_logits=target_model(input_vector,cache=target_cache)
-    next_token,_=next_token_generator(target_logits[:,-1,:])
-    input_vector=mx.concatenate([input_vector,next_token],axis=1)
-    corrected_tokens=1
+    #initial prefill for target model
+    target_logits = target_model(input_vector, cache=target_cache)
+    next_token, _ = next_token_generator(target_logits[:, -1, :])
+    
+    mx.eval(next_token)
 
-    mx.eval(input_vector)
     start=time.perf_counter()
-    while corrected_tokens<num_tokens:
-        logits=target_model(input_vector[...,-1:],cache=target_cache)
-        next_token,probs=next_token_generator(logits[:,-1,:])
-        input_vector=mx.concatenate([input_vector,next_token],axis=1)
-        corrected_tokens+=1
-    mx.eval(input_vector)
+
+    for _ in range(num_tokens):
+        logits=target_model(next_token,cache=target_cache)
+        next_token,_=next_token_generator(logits[:,-1,:])
+    
+    mx.eval(next_token)
+
     end=time.perf_counter()
 
     return end-start
 
 if __name__=='__main__':
-    num_tokens=100
-    for i in range(5):
-        time_taken=generate_tokens(num_tokens)
-    print(f"The speed of only target_model is {num_tokens/time_taken} tok/s")
+    num_tokens=150
+
+    for _ in range(10):
+        generate_tokens_target(num_tokens)
+
+    times=[]
+    for i in range(30):
+        time_taken=generate_tokens_target(num_tokens)
+        times.append(time_taken)
+    
+    print(f"Target Model token/sec : {num_tokens/(sum(times)/len(times))} tok/s")
+    print(f"Target Model latency/token : {((sum(times)/len(times))/num_tokens)*1000} ms/tok")
    
 
 
