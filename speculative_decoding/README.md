@@ -1,12 +1,12 @@
-# Speculative Decoding on Apple Silicon — Experimental Log
+# Speculative Decoding on Apple Silicon — Experimental Results
 
-This repository documents the implementation and measurements completed so far for speculative decoding with MLX-LM on an Apple M3 MacBook Air. It is an experiment log for this specific project: the model pair, benchmark configurations, measured results, observations, and unresolved questions.
+This repository records the current experiments for speculative decoding using MLX on an Apple M3 MacBook Air. It documents the model pair, benchmark setup, measured results, observations, and the next steps toward a consolidated experimental harness.
 
-The next planned step is to consolidate the existing experiments into a proper experimental harness. Before doing that, this document records the evidence collected so far so that future changes can be compared against it.
+The purpose of this README is to preserve the results obtained so far and explain what they indicate. The tables below reproduce the current experiment outputs; measurements from separate scripts or experiments are kept separate where their reported baselines differ.
 
 ---
 
-## 1. Project setup
+## 1. Experimental setup
 
 ### Hardware
 
@@ -21,12 +21,10 @@ The next planned step is to consolidate the existing experiments into a proper e
 
 | Role | Model |
 |---|---|
-| Target | `mlx-community/Qwen2.5-1.5B-Instruct-4bit` |
-| Draft | `mlx-community/Qwen2.5-0.5B-Instruct-4bit` |
+| Target model | `mlx-community/Qwen2.5-1.5B-Instruct-4bit` |
+| Draft model | `mlx-community/Qwen2.5-0.5B-Instruct-4bit` |
 
-### Main benchmark configuration
-
-The reported speculative benchmark used:
+### Speculative benchmark configuration
 
 | Parameter | Value |
 |---|---:|
@@ -39,50 +37,32 @@ The reported speculative benchmark used:
 | Measurement runs | 30 |
 | Gamma sweep | `1, 2, 4, 6, 8, 12, 16` |
 
-The target-only and speculative benchmarks were intended to use the same prompt, generated-token count, sampling settings, hardware, and run counts. The results below are kept in separate experiment sections because the measured target-only baseline changed across runs and scripts.
+The target-only and speculative benchmarks are intended to use the same prompt, generation length, sampling settings, hardware, and run counts. Where separate experiment outputs report different target-only baselines, they are documented separately rather than silently combined.
 
 ---
 
-## 2. Work completed so far
+## 2. Target-only baseline
 
-The work has been carried out in the following order:
+The standalone `target_only.py` run reported:
 
-1. Measured target-only generation throughput and latency.
-2. Measured speculative decoding throughput and latency, including a gamma-1 run.
-3. Recorded acceptance accounting for gamma values 1, 2, and 4.
-4. Ran a gamma sweep over `1, 2, 4, 6, 8, 12, 16`, recording acceptance, token counts, throughput, latency, and speedup.
-5. Measured the relative cost of draft decoding versus target decoding, obtaining the cost coefficient `c`.
-6. Instrumented speculative decoding to measure draft time, target verification time, overhead, and total block time.
+| Metric | Result |
+|---|---:|
+| Throughput | 77.33314739037071 tok/s |
+| Latency per token | 12.931065574663483 ms/token |
 
-The next planned step is to review these measurements and then consolidate the existing experiment code into a reproducible experimental harness.
+Throughput and latency are reciprocal measures when calculated over the same timed token count and interval:
 
----
+\[
+\text{Latency (ms/token)} \approx \frac{1000}{\text{Throughput (tok/s)}}
+\]
 
-## 3. Target-only baseline measurements
-
-Several target-only throughput values have been observed in different runs. They should **not** be treated as one consistent baseline or averaged together: they came from different benchmark runs, and the reason for the variation has not yet been established.
-
-| Experiment / observation | Target throughput | Latency per token | Notes |
-|---|---:|---:|---|
-| Earlier historical measurement | 75.60 tok/s | 13.23 ms/token | Earlier result; original exact run conditions have not been recovered |
-| `target_only.py` rerun | 77.333 tok/s | 12.931 ms/token | Close to the historical result |
-| Phase 2 gamma-sweep baseline | 58.48 tok/s | 17.099 ms/token | Baseline used for the Phase 2 speedup table |
-| Earlier `experimental_harness.py` baseline | 41.01 tok/s | About 24.38 ms/token | Separate result from the earlier harness run |
-| Draft-versus-target cost experiment | 66.74 tok/s | 14.983 ms/token | Target decode measurement used to calculate `c` |
-
-### Reflection
-
-The target-only results vary considerably, from about 41 tok/s to 77 tok/s. The 77.33 tok/s result is close to the historical 75.60 tok/s result, but the later Phase 2 baseline was 58.48 tok/s. Comparing results from different runs without understanding this variation could distort the calculated speedup.
-
-An investigation compared system Python and the project virtual environment, including MLX versions 0.31.2 and 0.32.1, and tried different synchronization patterns. Those tests did not establish the cause of the throughput variation.
-
-**Current status:** the variation is documented, but its cause remains unresolved. Future comparisons should use the target-only baseline measured under the same controlled run conditions as the corresponding speculative experiment.
+The reported values are consistent with this relationship.
 
 ---
 
-## 4. Initial speculative measurement — gamma = 1
+## 3. Speculative benchmark — gamma = 1
 
-One speculative benchmark reported the following:
+The gamma-1 speculative benchmark reported:
 
 | Metric | Result |
 |---|---:|
@@ -99,45 +79,45 @@ One speculative benchmark reported the following:
 | Throughput | 79.47 tok/s |
 | Latency | 12.583 ms/token |
 | Expected alpha | 0.5933 |
-| Realized alpha (mean of per-run alphas) | 0.5957 |
+| Realized alpha | 0.5957 |
 | Accepted draft tokens | 1,670 |
 | Proposed draft tokens | 2,815 |
 
-The user confirmed that realized alpha is calculated as the arithmetic mean of the acceptance ratio from each measurement run:
+The realized alpha is the arithmetic mean of the per-run acceptance ratios:
 
 \[
-\bar{\alpha} = \frac{1}{R}\sum_{i=1}^{R}\alpha_i
+\bar{\alpha}=\frac{1}{R}\sum_{i=1}^{R}\alpha_i
 \]
 
-where \(R=30\). This is not necessarily equal to the aggregate ratio of all accepted tokens divided by all proposed tokens, because the aggregate ratio weights runs according to their proposal counts.
+where \(R=30\). This mean need not equal the aggregate acceptance ratio calculated by dividing total accepted tokens by total proposed tokens.
 
-For this run, the aggregate ratio from the totals is:
+Using the reported totals, the aggregate ratio is:
 
 \[
-\alpha_{\text{aggregate}}=\frac{1670}{2815}\approx 0.5932
+\alpha_{\text{aggregate}}=\frac{1670}{2815}\approx0.5932
 \]
 
-This does not contradict the reported mean per-run alpha of 0.5957; they are different aggregation methods.
+Both values can differ because the mean per-run ratio weights every run equally, whereas the aggregate ratio gives more weight to runs with more proposed tokens.
 
-The target-only `target_only.py` rerun reported 77.333 tok/s. Using these two reported throughputs gives an **observed cross-run comparison** of:
+### Standalone comparison
+
+Comparing the standalone target-only result with this gamma-1 result:
 
 \[
-\frac{79.47}{77.333}\approx 1.028
+S=\frac{79.47}{77.33314739037071}\approx1.028
 \]
 
-That is approximately 2.76% higher throughput for the speculative run. Both benchmarks were reported to use the same experimental conditions, but this small observed difference should not be treated as conclusive evidence of a repeatable speedup until run-to-run variation is characterized.
-
-This result must also remain separate from the later Phase 2 sweep, which used a target-only baseline of 58.48 tok/s.
+This is an observed throughput ratio of approximately **1.028×**, or about **2.76% higher throughput** for the reported speculative run. This comparison is meaningful only to the extent that the two measurements use comparable timing boundaries and conditions; repeated measurements are needed to determine whether the small difference is repeatable.
 
 ---
 
-## 5. Acceptance accounting — gamma = 1, 2, and 4
+## 4. Acceptance accounting
 
-Acceptance accounting records how many draft tokens were accepted in each speculative block, rather than only reporting one overall alpha value.
+Acceptance accounting records the number of speculative blocks that accepted exactly \(k\) draft tokens. This gives more detail than a single overall acceptance ratio.
 
 ### Gamma = 1
 
-| Accepted draft tokens in a block | Number of blocks | Percentage |
+| Accepted draft tokens in a block | Blocks | Percentage |
 |---:|---:|---:|
 | 0 | 1,137 | 40.43% |
 | 1 | 1,675 | 59.57% |
@@ -146,12 +126,12 @@ Acceptance accounting records how many draft tokens were accepted in each specul
 Mean accepted draft tokens per block:
 
 \[
-\frac{0(1137)+1(1675)}{2812}=0.5957
+\bar{k}=\frac{0(1137)+1(1675)}{2812}=0.5957
 \]
 
 ### Gamma = 2
 
-| Accepted draft tokens in a block | Number of blocks | Percentage |
+| Accepted draft tokens in a block | Blocks | Percentage |
 |---:|---:|---:|
 | 0 | 991 | 42.46% |
 | 1 | 530 | 22.71% |
@@ -161,12 +141,12 @@ Mean accepted draft tokens per block:
 Mean accepted draft tokens per block:
 
 \[
-\frac{0(991)+1(530)+2(813)}{2334}\approx0.9237
+\bar{k}=\frac{0(991)+1(530)+2(813)}{2334}\approx0.9237
 \]
 
 ### Gamma = 4
 
-| Accepted draft tokens in a block | Number of blocks | Percentage |
+| Accepted draft tokens in a block | Blocks | Percentage |
 |---:|---:|---:|
 | 0 | 774 | 40.23% |
 | 1 | 422 | 21.93% |
@@ -178,27 +158,24 @@ Mean accepted draft tokens per block:
 Mean accepted draft tokens per block:
 
 \[
-\frac{0(774)+1(422)+2(299)+3(168)+4(261)}{1924}\approx1.3347
+\bar{k}=
+\frac{0(774)+1(422)+2(299)+3(168)+4(261)}{1924}
+\approx1.3347
 \]
 
-### What these measurements show
+### Interpretation
 
-- The mean number of accepted draft tokens per block rises across the measured configurations: 0.5957 at gamma 1, 0.9237 at gamma 2, and 1.3347 at gamma 4.
-- The probability of accepting every proposal falls as gamma increases in these measurements: 59.57%, 34.83%, and 13.57%, respectively.
-- Mean accepted draft tokens per block is not the same as total output tokens per block. Speculative decoding may also emit a correction token or a bonus token.
+- Mean accepted draft tokens per block increases across these measurements: 0.5957 at gamma 1, 0.9237 at gamma 2, and 1.3347 at gamma 4.
+- The fraction of blocks accepting every proposal decreases from 59.57% at gamma 1 to 34.83% at gamma 2 and 13.57% at gamma 4.
+- Mean accepted draft tokens per block is not the same as total output tokens per block. A speculative block may also emit a correction token or a bonus token.
 
-These counts were collected for the acceptance-accounting experiments. They should not automatically be treated as the exact acceptance distributions for the later Phase 2 sweep unless the prompt, settings, and measurement population match.
+These distributions should be compared directly with another experiment only when the prompt, sampling configuration, and counting procedure are equivalent.
 
 ---
 
-## 6. Phase 2 — Gamma sweep
+## 5. Phase 2 — Gamma sweep
 
-The Phase 2 sweep used the following target-only baseline:
-
-- **Target throughput:** 58.48 tok/s
-- **Target latency:** 17.099 ms/token
-
-The results below are the reported Phase 2 measurements.
+The Phase 2 experiment reported a target-only baseline of **58.48 tok/s**, with latency of **17.099 ms/token**. The results below preserve that experiment's reported baseline and metrics.
 
 | Gamma | Target tok/s | Spec tok/s | Speedup | Alpha | Draft tokens generated | Accepted tokens | Target verification count | Latency (ms/token) |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -210,29 +187,25 @@ The results below are the reported Phase 2 measurements.
 | 12 | 58.48 | 17.38 | 0.297× | 0.6075 | 20,510 | 2,711 | 1,779 | 57.523 |
 | 16 | 58.48 | 12.27 | 0.210× | 0.5893 | 28,389 | 2,634 | 1,856 | 81.475 |
 
-The experiment produced speedup-versus-gamma and acceptance-versus-gamma graphs.
-
-### Main observations
-
-1. **Gamma = 1 was the fastest tested speculative configuration:** 53.44 tok/s.
-2. **None of the tested gamma values exceeded the Phase 2 target-only baseline** of 58.48 tok/s.
-3. Alpha stayed in a fairly narrow range, approximately 0.586–0.608.
-4. Speculative throughput declined as gamma increased in this sweep.
-5. The number of proposed draft tokens increased substantially with gamma, while the accepted-token total did not increase proportionally at the larger gamma values.
-
-For example, gamma 8 recorded 14,428 draft tokens and 2,631 accepted tokens, while gamma 16 recorded 28,389 draft tokens and 2,634 accepted tokens. These are aggregate counts from the reported experiment; interpreting them fully requires the corresponding block counts and exact counting definitions.
+The experiment produced a speedup-versus-gamma graph and an acceptance-versus-gamma graph.
 
 ### Interpretation
 
-The measured acceptance ratio alone does not explain throughput. The time spent generating draft tokens, verifying them, and handling the speculative block also matters.
+1. Gamma 1 is the fastest of the tested speculative configurations in this sweep, at 53.44 tok/s.
+2. No gamma in this sweep exceeds its reported target-only baseline of 58.48 tok/s.
+3. Alpha remains in a relatively narrow range, approximately 0.586–0.608.
+4. Speculative throughput decreases as gamma increases in these measurements.
+5. Draft-token proposals increase substantially with gamma, while accepted-token totals do not increase proportionally at the largest gamma values.
 
-These results show that, for this model pair and this implementation under the reported Phase 2 conditions, larger gamma values were not beneficial for end-to-end throughput. They do not establish that the same behavior will occur for every model pair or implementation.
+For example, gamma 8 reports 14,428 proposed draft tokens and 2,631 accepted tokens; gamma 16 reports 28,389 proposed draft tokens and 2,634 accepted tokens. This suggests that generating more proposals did not yield a corresponding increase in the aggregate number of accepted tokens in this experiment. A complete interpretation also depends on block counts, generated output length, and the exact counting definitions.
+
+**Important baseline note:** the standalone target-only benchmark reports 77.333 tok/s, while this Phase 2 experiment reports 58.48 tok/s as its target-only baseline. These are separate current experiment outputs. The Phase 2 speedups above are calculated against 58.48 tok/s, as reported by that experiment; they should not be recalculated using the standalone baseline unless the runs are confirmed to be directly comparable.
 
 ---
 
-## 7. Phase 3 — Relative draft/target decoding cost
+## 6. Draft-versus-target decode cost
 
-A separate experiment measured the decoding cost of the draft and target models.
+A separate experiment measured the per-token decoding costs of the two models.
 
 | Metric | Draft model | Target model |
 |---|---:|---:|
@@ -240,7 +213,7 @@ A separate experiment measured the decoding cost of the draft and target models.
 | Standard deviation | 2.5261 ms | 2.1405 ms |
 | Throughput | 171.77 tok/s | 66.74 tok/s |
 
-The measured cost coefficient was defined as:
+The cost coefficient is defined as:
 
 \[
 c=\frac{t_{\text{draft}}}{t_{\text{target}}}
@@ -252,23 +225,19 @@ Using the reported mean latencies:
 c=\frac{5.8217}{14.9830}\approx0.3886
 \]
 
-Therefore, the measured draft decode step costs about **38.86% of the measured target decode step** under this experiment's timing setup.
+Thus, under this experiment's timing setup, one draft decoding step costs approximately **38.86% of one target decoding step**.
 
-### Interpretation and caveat
+### Interpretation
 
-This coefficient is useful for comparing the individual decode-step costs. It does not by itself predict end-to-end speculative speedup. Speculative decoding also incurs target verification and implementation overhead, and verification cost can change with gamma.
+The coefficient compares the measured costs of individual decoding steps. It does not by itself predict end-to-end speculative speedup. Total speculative performance also depends on verification cost, acceptance behavior, cache operations, sampling, synchronization, and other overheads.
 
-The cost-coefficient experiment's target latency (14.983 ms/token) differs from the Phase 2 baseline latency (17.099 ms/token) and from the 12.931 ms/token result from `target_only.py`. The measurements should remain separate until the cause of baseline variation is understood and the timing methods are confirmed to be comparable.
-
-The draft latency standard deviation is also relatively large compared with its mean, so the coefficient should be treated as an estimate from this run rather than a perfectly stable constant.
+The target latency in this cost experiment is 14.983 ms/token, whereas the Phase 2 baseline reports 17.099 ms/token and the standalone target-only run reports 12.931 ms/token. Keep these values tied to their respective experiments until the timing conventions and baseline comparability are verified.
 
 ---
 
-## 8. Phase 3 — Speculative block timing
+## 7. Speculative block timing
 
-A separate timing experiment measured the time attributed to draft generation, target verification, overhead, and the complete speculative block.
-
-The reported table is reproduced below. All timing columns are in milliseconds per block.
+The following experiment measured the time attributed to draft generation, target verification, overhead, and the full speculative block. Timings are in milliseconds per block.
 
 | Gamma | Draft time/block | Target verification time/block | Overhead/block | Total block time | Blocks | Reported tok/s |
 |---:|---:|---:|---:|---:|---:|---:|
@@ -280,113 +249,94 @@ The reported table is reproduced below. All timing columns are in milliseconds p
 | 12 | 90.361 | 58.859 | 2.407 | 151.627 | 1,815 | 16.24 |
 | 16 | 121.114 | 59.370 | 2.519 | 183.003 | 1,797 | 13.59 |
 
-### Arithmetic check
+### Arithmetic consistency
 
-The reported total block time is consistent with the sum of the three reported components, within rounding:
+The reported total block time is approximately the sum of the three timing components:
 
 \[
 T_{\text{block}}=T_d+T_v+T_{\text{overhead}}
 \]
 
-For gamma 2:
+For gamma 2, the component sum is 52.618 ms and the reported total is 52.617 ms, a 0.001 ms difference consistent with rounding.
 
-\[
-21.269+29.662+1.687=52.618\text{ ms}
-\]
+### Observations
 
-The table reports 52.617 ms, a 0.001 ms difference attributable to rounding.
-
-### Observations requiring investigation
-
-- Draft time generally increases with gamma, as more draft tokens are proposed.
-- Draft time does not scale perfectly linearly with gamma. For example, gamma 1 reports 6.972 ms/block, while gamma 2 reports 21.269 ms/block.
-- Target verification time rises from gamma 1 through gamma 8, then is lower for gamma 12 and gamma 16.
+- Draft time generally rises with gamma, consistent with proposing more tokens.
+- Draft time does not scale exactly linearly with gamma. For example, gamma 1 reports 6.972 ms/block, while gamma 2 reports 21.269 ms/block.
+- Target verification time rises through gamma 8, then is lower at gamma 12 and gamma 16.
 - Total block time increases with gamma in these measurements.
-- Reported throughput decreases with gamma after gamma 1.
+- Reported throughput declines as gamma increases after gamma 1.
 
-These patterns do not automatically prove a timing bug. GPU execution, synchronization, workload size, and timer boundaries can affect scaling. However, the results justify checking the timing code and repeating measurements before drawing detailed conclusions about the cost of individual phases.
+Non-linear timing does not automatically indicate a bug: execution and synchronization costs can depend on workload size. However, the non-linear component measurements should be checked against the timing instrumentation and repeated before being used to make detailed claims about bottlenecks.
 
-### Timing interpretation caveat
+### Timing caveat
 
-The reciprocal of block time gives blocks per second, not tokens per second. A block can yield different numbers of output tokens depending on acceptance and correction/bonus behavior. Therefore, the reported token throughput must be calculated from the actual output-token count and the full timed generation interval.
+The reciprocal of block time gives blocks per second, not tokens per second. Since a block can produce a variable number of output tokens, throughput must be calculated using the actual number of output tokens generated over the full timed interval.
 
-Before using the timing table to explain throughput, verify that:
-
-- Each component timer includes the intended MLX evaluation/synchronization.
-- Timer boundaries are consistent across gamma values.
-- The component timings cover the same work as the total block timer without unintended gaps or overlaps.
-- The token count used for throughput matches the output tokens generated in the timed interval.
-- The meaning of “target verification count” and “blocks” is consistent across experiments.
-
-The timing table is retained as a measurement, but its component definitions need to be validated before treating it as a final cost breakdown.
+Before treating the component timings as a definitive cost breakdown, verify that:
+- Each timer includes the intended MLX evaluation/synchronization.
+- Timing boundaries are consistent across gamma values.
+- The component timers account for the same work as the total block timer, without unintended gaps or overlaps.
+- The throughput calculation uses the actual timed output-token count.
+- “Blocks,” “target verification count,” and “draft tokens generated” have clearly defined and consistent meanings.
 
 ---
 
-## 9. Combined findings so far
+## 8. Findings from the current measurements
 
-The measurements collected to date support these conclusions:
+The current results support the following observations:
 
-1. A target-only benchmark has produced results from approximately 41 to 77 tok/s across separate experiments. The cause of this variation has not been established.
-2. One gamma-1 speculative run reported 79.47 tok/s against a target-only run reporting 77.33 tok/s, an observed cross-run ratio of about 1.028×. This small difference is not yet evidence of a repeatable speedup.
-3. The separate Phase 2 sweep used a 58.48 tok/s target-only baseline. None of its tested gamma values exceeded that baseline.
-4. Acceptance accounting for gamma 1, 2, and 4 is internally consistent with the reported block counts and mean accepted-token counts.
-5. In Phase 2, alpha remained around 0.59–0.61 while throughput declined as gamma increased.
-6. The measured cost coefficient was \(c=0.3886\), based on the separate draft-versus-target decode-cost experiment.
-7. The timing breakdown shows increasing total block time with gamma, but some component timings have non-linear behavior that should be checked against the instrumentation.
+1. The standalone target-only benchmark reports 77.333 tok/s.
+2. The standalone gamma-1 speculative benchmark reports 79.47 tok/s, an observed throughput ratio of approximately 1.028× relative to that standalone baseline.
+3. The Phase 2 sweep uses its own reported target-only baseline of 58.48 tok/s; none of its tested gamma values exceeds that baseline.
+4. Acceptance accounting for gamma 1, 2, and 4 gives mean accepted draft-token counts per block of 0.5957, 0.9237, and 1.3347, respectively.
+5. In the Phase 2 sweep, alpha stays around 0.59–0.61 while throughput declines with larger gamma.
+6. The separate draft-versus-target cost experiment reports \(c=0.3886\).
+7. The block-timing experiment shows rising total block time with gamma, while some individual timing components vary non-linearly and require validation.
 
-These are results from different runs and experimental stages. They should not be combined into one performance claim unless their configurations and timing definitions are confirmed to be comparable.
+These observations apply to the reported experiments. Results from different sections should not be combined into one performance claim unless their configurations and timing conventions are known to be comparable.
 
 ---
 
-## 10. Work remaining before the experimental harness
+## 9. Next step — consolidate the experimental harness
 
-The next step is to consolidate the existing experiment code into a proper experimental harness. Before doing so, the following checks will make the resulting measurements easier to trust and reproduce.
+The next planned stage is to consolidate the existing experiments into a reproducible harness.
 
-### A. Standardize baseline measurement
+### Baseline and run metadata
+- [ ] Record per-run target-only and speculative timing, not just averages.
+- [ ] Record model identifiers/revisions, Python executable, and package versions.
+- [ ] Keep prompts, token counts, sampling parameters, warmups, and measurement runs fixed for direct comparisons.
+- [ ] Clearly identify which target-only baseline is used for each speedup calculation.
 
-- [ ] Use one documented target-only timing convention.
-- [ ] Save individual run times as well as mean and standard deviation.
-- [ ] Record the exact model revision and Python/package versions.
-- [ ] Ensure target-only and speculative comparisons use comparable prompts, token counts, sampling settings, warmups, and measurement runs.
-- [ ] Investigate the observed target-only throughput variation.
+### Acceptance accounting
+- [ ] Record counts for every possible accepted-token count from 0 through gamma.
+- [ ] Store per-run alpha and aggregate alpha separately.
+- [ ] Track proposed draft tokens, accepted draft tokens, correction/bonus tokens, and block counts as distinct quantities.
 
-### B. Standardize acceptance accounting
+### Timing validation
+- [ ] Review timer boundaries for draft generation, target verification, overhead, and total block time.
+- [ ] Confirm MLX computations are evaluated before the relevant timers stop.
+- [ ] Validate token accounting used for throughput.
+- [ ] Repeat timing measurements and retain variability statistics.
+- [ ] Ensure component timings are interpreted consistently.
 
-- [ ] Record the number of blocks accepting each possible number of draft tokens.
-- [ ] Clearly distinguish the mean of per-run alpha values from aggregate alpha.
-- [ ] Record proposed tokens, accepted tokens, correction/bonus output tokens, and block counts separately.
-
-### C. Validate the timing instrumentation
-
-- [ ] Inspect the timer boundaries for draft generation, target verification, overhead, and total block time.
-- [ ] Confirm the appropriate MLX evaluation/synchronization occurs before timers stop.
-- [ ] Repeat the gamma timing experiment to check variability.
-- [ ] Verify output-token accounting used for throughput.
-- [ ] Check whether the timing components cover the full block without double counting.
-
-### D. Consolidate into the experimental harness
-
-The harness should produce, for each gamma:
-
+### Harness outputs
+For every gamma, the final harness should save:
 - Target-only baseline and speculative throughput.
-- Latency and total timed duration.
+- Latency and total elapsed time.
 - Speedup.
-- Alpha and acceptance accounting.
+- Alpha and acceptance-accounting distributions.
 - Draft-token, accepted-token, and verification counts.
 - Draft, verification, overhead, and total block timings.
-- The speedup-versus-gamma and acceptance-versus-gamma graphs.
+- Speedup-versus-gamma and acceptance-versus-gamma plots.
 - Machine-readable results for later analysis.
-
-The harness should preserve per-run data so that averages, variability, and derived metrics can be checked after the experiment.
 
 ---
 
-## 11. Current project status
+## Current status
 
-**Completed:** target-only benchmarking, speculative benchmarking, acceptance accounting for gamma 1/2/4, the Phase 2 gamma sweep, cost-coefficient measurement, and speculative block timing instrumentation.
+**Completed:** target-only benchmarking, gamma-1 speculative benchmarking, acceptance accounting for gamma 1/2/4, the Phase 2 gamma sweep, draft-versus-target cost measurement, and speculative block timing.
 
-**Not yet resolved:** variation in target-only throughput across separate runs and the detailed interpretation of some component timings.
+**Still to validate:** comparability of the separate reported target-only baselines and the timing boundaries used for the block-level breakdown.
 
-**Next milestone:** validate the measurement conventions and timing instrumentation, then consolidate the existing experiments into a reproducible experimental harness.
-
-The goal of the next stage is not to change models immediately. It is to make the current measurements reproducible and internally interpretable so that future model or implementation comparisons are based on reliable evidence.
+**Next milestone:** validate measurement definitions and consolidate the existing experiments into a reproducible experimental harness before changing the model pair.
