@@ -1,0 +1,5 @@
+First of all before getting into why we need some other alternatives to the quadratic attention (which is the standard attention from the paper "Attention is all you need" ) 
+The standard attention has a memory cost of O(n^2)
+So for long sequences quadratic attention is not at all ideal , refer to the following image from the "Hitchhiker's guide to agentic AI" which shows how attention memory cost increase rapidly as the sequence length increases and for near 1M seq length, Like it's literally impossible without sub-quadratic methods.
+image - seqlength_vs_memory.png
+Now the image shows that at context of 1M, the memory cost of the attention matrix is 4TB and no GPU has this much of HBM. And also that 4TB is for one particular attention head, but each layer has several attention heads. Now My doubt is that why can't we use the standard attention only but let's just distribute the training across GPUs. Actually we have something called as Flash attention like it doesn't store the full attention matrix, but it seems like at 1M context it too fails?. But it seems like the communication becomes the bottleneck in that case.

@@ -78,7 +78,7 @@ def run_benchmark(n_head=8,n_kv_head=8,batch_size=64,seq_len=1024):
 
 if __name__=="__main__":
 
-    print("\n--- Project Step 2: Speed Measurement ---")
+    print("\n---  Speed Measurement ---")
     print("Conditions: Batch=64, History=1024 tokens\n")
 
     latency_mha = run_benchmark(n_head=8, n_kv_head=8)
