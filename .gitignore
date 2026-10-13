@@ -4,3 +4,14 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 *.npy
+*.jsonl
+*.bin
+*.gz
+
+# Quantization project: downloaded/generated model artifacts
+/quantization/models/**/*.gguf
+/quantization/models/hf/**/model*.safetensors
+/quantization/models/hf/**/.cache/
+/quantization/checkpoints/
+/quantization/outputs/
+/quantization/logs/
