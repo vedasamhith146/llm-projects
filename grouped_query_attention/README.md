@@ -14,7 +14,7 @@ runtime experiments, not language-quality evaluations: there is no trained
 checkpoint, tokenizer pipeline, validation dataset, or training script in
 this directory.
 
-## Research questions
+## questions
 
 The code explores three practical questions:
 
