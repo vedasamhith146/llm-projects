@@ -39,11 +39,12 @@ class CausalSelfAttention(nn.Module):
 
 def run_benchmark(n_head=8,n_kv_head=8,batch_size=64,seq_len=1024):
 
-    if torch.backends.mps.is_available():
-        device=torch.device('mps')
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
     else:
-        print("MPS not found ! Using CPU")
-        device=torch.device('cpu')
+        device = torch.device("cpu")
 
     model=CausalSelfAttention(n_head,n_kv_head).to(device)
 
@@ -58,7 +59,10 @@ def run_benchmark(n_head=8,n_kv_head=8,batch_size=64,seq_len=1024):
         with torch.no_grad():
             _=model(x,k_cache,v_cache)
     
-    torch.mps.synchronize()
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    elif device.type == "mps":
+        torch.mps.synchronize()
     print("Done .")
 
     iterations=100
@@ -68,7 +72,10 @@ def run_benchmark(n_head=8,n_kv_head=8,batch_size=64,seq_len=1024):
         with torch.no_grad():
             _=model(x,k_cache,v_cache)
 
-    torch.mps.synchronize()
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    elif device.type == "mps":
+        torch.mps.synchronize()
 
     end_time=time.perf_counter()
 
